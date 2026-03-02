@@ -1,18 +1,21 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from app.database import Base
 from app.models.mock import MockSuite, MockRule, MockResponse, MockWhitelist
 
 
 @pytest.fixture
 def db_session():
+    """Create an in-memory SQLite database for testing."""
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
     yield session
     session.close()
+    Base.metadata.drop_all(engine)
 
 
 def test_create_mock_suite(db_session):
