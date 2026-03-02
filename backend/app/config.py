@@ -6,13 +6,13 @@ class Settings(BaseSettings):
     # App
     APP_NAME: str = "MirrorGate"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = True
+    DEBUG: bool = False
 
     # Database
     MYSQL_HOST: str = "localhost"
     MYSQL_PORT: int = 3306
     MYSQL_USER: str = "root"
-    MYSQL_PASSWORD: str = "password"
+    MYSQL_PASSWORD: str = "dev_password"  # Change in production
     MYSQL_DATABASE: str = "mirror_gate"
 
     # Redis
