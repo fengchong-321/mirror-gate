@@ -130,7 +130,6 @@ const fetchData = async () => {
     tableData.value = response.data.items
     total.value = response.data.total
   } catch (error) {
-    console.error('Failed to fetch mock suites:', error)
     ElMessage.error('Failed to fetch mock suites')
   } finally {
     loading.value = false
@@ -174,7 +173,6 @@ const confirmCopy = async () => {
     copyDialogVisible.value = false
     fetchData()
   } catch (error) {
-    console.error('Failed to copy suite:', error)
     ElMessage.error('Failed to copy suite')
   } finally {
     copyLoading.value = false
@@ -197,7 +195,6 @@ const handleDelete = async (row: MockSuite) => {
     fetchData()
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('Failed to delete suite:', error)
       ElMessage.error('Failed to delete suite')
     }
   }
