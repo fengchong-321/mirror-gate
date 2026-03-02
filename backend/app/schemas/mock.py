@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from app.models.mock import RuleOperator, WhitelistType, MatchType
 
 
@@ -19,8 +19,7 @@ class MockRuleResponse(MockRuleBase):
     id: int
     suite_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # MockResponse schemas
@@ -41,8 +40,7 @@ class MockResponseResponse(MockResponseBase):
     id: int
     suite_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # MockWhitelist schemas
@@ -59,8 +57,7 @@ class MockWhitelistResponse(MockWhitelistBase):
     id: int
     suite_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # MockSuite schemas
@@ -77,9 +74,7 @@ class MockSuiteCreate(MockSuiteBase):
     whitelists: List[MockWhitelistCreate] = []
     match_type: MatchType = MatchType.ANY
 
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MockSuiteUpdate(BaseModel):
@@ -92,9 +87,7 @@ class MockSuiteUpdate(BaseModel):
     whitelists: Optional[List[MockWhitelistCreate]] = None
     match_type: Optional[MatchType] = None
 
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MockSuiteResponse(MockSuiteBase):
@@ -108,10 +101,11 @@ class MockSuiteResponse(MockSuiteBase):
     responses: List[MockResponseResponse] = []
     whitelists: List[MockWhitelistResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MockSuiteListResponse(BaseModel):
     total: int
     items: List[MockSuiteResponse]
+
+    model_config = ConfigDict(from_attributes=True)
