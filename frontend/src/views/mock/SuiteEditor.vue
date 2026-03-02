@@ -102,7 +102,13 @@
               Add Response
             </el-button>
           </div>
-          <el-table :data="form.responses" border size="small">
+          <el-table
+            :data="form.responses"
+            border
+            size="small"
+            highlight-current-row
+            @current-change="(row) => { if (row) selectedResponseIndex = form.responses.indexOf(row) }"
+          >
             <el-table-column label="Path" min-width="150">
               <template #default="{ row }">
                 <el-input v-model="row.path" placeholder="/api/example" />
@@ -141,7 +147,7 @@
               </template>
             </el-table-column>
           </el-table>
-          <div v-if="form.responses.length > 0" class="response-detail">
+          <div v-if="form.responses.length > 0 && form.responses[selectedResponseIndex]" class="response-detail">
             <el-divider content-position="left">Response JSON</el-divider>
             <el-input
               v-model="form.responses[selectedResponseIndex].response_json"
@@ -273,7 +279,6 @@ watch(() => props.visible, async (newVal) => {
         form.value.responses = form.value.responses || []
         form.value.whitelists = form.value.whitelists || []
       } catch (error) {
-        console.error('Failed to load suite:', error)
         ElMessage.error('Failed to load suite data')
       } finally {
         loading.value = false
@@ -335,6 +340,28 @@ const removeWhitelist = (index: number) => {
   form.value.whitelists?.splice(index, 1)
 }
 
+const validateJsonFields = (): boolean => {
+  for (const resp of form.value.responses || []) {
+    if (resp.response_json && resp.response_json.trim()) {
+      try {
+        JSON.parse(resp.response_json)
+      } catch {
+        ElMessage.error(`Invalid JSON in response for path: ${resp.path}`)
+        return false
+      }
+    }
+    if (resp.ab_test_config && resp.ab_test_config.trim()) {
+      try {
+        JSON.parse(resp.ab_test_config)
+      } catch {
+        ElMessage.error(`Invalid JSON in AB Test Config for path: ${resp.path}`)
+        return false
+      }
+    }
+  }
+  return true
+}
+
 const handleClose = () => {
   emit('update:visible', false)
   formRef.value?.resetFields()
@@ -350,6 +377,11 @@ const handleSave = async () => {
     return
   }
 
+  // Validate JSON fields before saving
+  if (!validateJsonFields()) {
+    return
+  }
+
   saving.value = true
   try {
     if (props.mode === 'create') {
@@ -362,7 +394,6 @@ const handleSave = async () => {
     emit('saved')
     handleClose()
   } catch (error) {
-    console.error('Failed to save suite:', error)
     ElMessage.error('Failed to save suite')
   } finally {
     saving.value = false
