@@ -1,78 +1,125 @@
-from datetime import datetime
+"""Mock data models for the Mirror Gate application.
+
+This module defines the SQLAlchemy models for mock suites, rules, responses,
+and whitelists used in the API mocking system.
+"""
+
+import enum
+from datetime import datetime, timezone
+from typing import Optional, List
+
 from sqlalchemy import Column, Integer, String, Boolean, Text, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
+
 from app.database import Base
-import enum
+
+
+# Field length constants for database columns
+# Name field - max 100 chars for UI input constraints
+MAX_NAME_LENGTH = 100
+MAX_FIELD_LENGTH = 100  # Rule matching field name
+MAX_PATH_LENGTH = 255  # API path
+MAX_METHOD_LENGTH = 10  # HTTP method (GET, POST, etc.)
+MAX_USER_LENGTH = 50  # Username fields
+MAX_WHITELIST_VALUE_LENGTH = 255  # Whitelist values
 
 
 class MatchType(str, enum.Enum):
-    ANY = "any"  # 任一匹配
-    ALL = "all"  # 全部匹配
+    """Match type for mock rules within a suite."""
+    ANY = "any"  # Match any rule
+    ALL = "all"  # Match all rules
 
 
 class RuleOperator(str, enum.Enum):
+    """Operator for comparing rule values."""
     EQUALS = "equals"
     CONTAINS = "contains"
     NOT_EQUALS = "not_equals"
 
 
 class WhitelistType(str, enum.Enum):
+    """Type of whitelist entry."""
     CLIENT_ID = "clientId"
     USER_ID = "userId"
     VID = "vid"
 
 
 class MockSuite(Base):
+    """Represents a mock suite containing rules, responses, and whitelists.
+
+    A suite defines a complete mock configuration that can be enabled/disabled
+    and contains all the necessary rules and responses for mocking APIs.
+    """
     __tablename__ = "mock_suites"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), unique=True, nullable=False)
-    description = Column(Text)
-    is_enabled = Column(Boolean, default=True)
-    enable_compare = Column(Boolean, default=False)
-    created_by = Column(String(50))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_by = Column(String(50))
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    id: int = Column(Integer, primary_key=True, index=True)
+    name: str = Column(String(MAX_NAME_LENGTH), unique=True, nullable=False)
+    description: Optional[str] = Column(Text)
+    is_enabled: bool = Column(Boolean, default=True)
+    enable_compare: bool = Column(Boolean, default=False)
+    created_by: Optional[str] = Column(String(MAX_USER_LENGTH))
+    created_at: datetime = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_by: Optional[str] = Column(String(MAX_USER_LENGTH))
+    updated_at: datetime = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
+    )
+    match_type: MatchType = Column(Enum(MatchType), default=MatchType.ANY)
 
-    match_type = Column(Enum(MatchType), default=MatchType.ANY)
+    rules: List["MockRule"] = relationship("MockRule", back_populates="suite", cascade="all, delete-orphan")
+    responses: List["MockResponse"] = relationship("MockResponse", back_populates="suite", cascade="all, delete-orphan")
+    whitelists: List["MockWhitelist"] = relationship("MockWhitelist", back_populates="suite", cascade="all, delete-orphan")
 
-    rules = relationship("MockRule", back_populates="suite", cascade="all, delete-orphan")
-    responses = relationship("MockResponse", back_populates="suite", cascade="all, delete-orphan")
-    whitelists = relationship("MockWhitelist", back_populates="suite", cascade="all, delete-orphan")
+    def __repr__(self) -> str:
+        return f"<MockSuite(id={self.id}, name={self.name!r}, is_enabled={self.is_enabled})>"
 
 
 class MockRule(Base):
+    """Represents a matching rule within a mock suite.
+
+    Rules define conditions that must be met for a mock suite to be applied.
+    """
     __tablename__ = "mock_rules"
 
-    id = Column(Integer, primary_key=True, index=True)
-    suite_id = Column(Integer, ForeignKey("mock_suites.id"), nullable=False)
-    field = Column(String(100), nullable=False)  # 匹配字段
-    operator = Column(Enum(RuleOperator), default=RuleOperator.EQUALS)
-    value = Column(Text, nullable=False)  # 匹配值
+    id: int = Column(Integer, primary_key=True, index=True)
+    suite_id: int = Column(Integer, ForeignKey("mock_suites.id"), nullable=False, index=True)
+    field: str = Column(String(MAX_FIELD_LENGTH), nullable=False)
+    operator: RuleOperator = Column(Enum(RuleOperator), default=RuleOperator.EQUALS)
+    value: str = Column(Text, nullable=False)
 
-    suite = relationship("MockSuite", back_populates="rules")
+    suite: MockSuite = relationship("MockSuite", back_populates="rules")
 
 
 class MockResponse(Base):
+    """Represents a mock response configuration within a suite.
+
+    Defines the response to return when a mock suite is matched.
+    """
     __tablename__ = "mock_responses"
 
-    id = Column(Integer, primary_key=True, index=True)
-    suite_id = Column(Integer, ForeignKey("mock_suites.id"), nullable=False)
-    path = Column(String(255), nullable=False)  # API 路径
-    method = Column(String(10), default="GET")
-    response_json = Column(Text)  # 响应 JSON
-    ab_test_config = Column(Text)  # AB 测试配置
-    timeout_ms = Column(Integer, default=0)  # 模拟超时（毫秒）
-    empty_response = Column(Boolean, default=False)  # 模拟空响应
-    suite = relationship("MockSuite", back_populates="responses")
+    id: int = Column(Integer, primary_key=True, index=True)
+    suite_id: int = Column(Integer, ForeignKey("mock_suites.id"), nullable=False, index=True)
+    path: str = Column(String(MAX_PATH_LENGTH), nullable=False)
+    method: str = Column(String(MAX_METHOD_LENGTH), default="GET")
+    response_json: Optional[str] = Column(Text)
+    ab_test_config: Optional[str] = Column(Text)
+    timeout_ms: int = Column(Integer, default=0)
+    empty_response: bool = Column(Boolean, default=False)
+
+    suite: MockSuite = relationship("MockSuite", back_populates="responses")
 
 
 class MockWhitelist(Base):
+    """Represents a whitelist entry within a mock suite.
+
+    Whitelists define which clients/users are allowed to trigger this mock.
+    """
     __tablename__ = "mock_whitelists"
 
-    id = Column(Integer, primary_key=True, index=True)
-    suite_id = Column(Integer, ForeignKey("mock_suites.id"), nullable=False)
-    type = Column(Enum(WhitelistType), nullable=False)
-    value = Column(String(255), nullable=False)
-    suite = relationship("MockSuite", back_populates="whitelists")
+    id: int = Column(Integer, primary_key=True, index=True)
+    suite_id: int = Column(Integer, ForeignKey("mock_suites.id"), nullable=False, index=True)
+    type: WhitelistType = Column(Enum(WhitelistType), nullable=False)
+    value: str = Column(String(MAX_WHITELIST_VALUE_LENGTH), nullable=False)
+
+    suite: MockSuite = relationship("MockSuite", back_populates="whitelists")
