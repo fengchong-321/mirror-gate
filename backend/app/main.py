@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
-from app.api.v1 import mock
+from app.api.v1 import mock, api_test, ui_test, auth, scheduler, dashboard, testcase
 
 settings = get_settings()
 
@@ -22,7 +22,13 @@ app.add_middleware(
 )
 
 # Include API routers
+app.include_router(auth.router, prefix="/api/v1")
 app.include_router(mock.router, prefix="/api/v1")
+app.include_router(api_test.router, prefix="/api/v1")
+app.include_router(ui_test.router, prefix="/api/v1")
+app.include_router(scheduler.router, prefix="/api/v1")
+app.include_router(dashboard.router, prefix="/api/v1")
+app.include_router(testcase.router, prefix="/api/v1")
 
 
 @app.get("/health")
