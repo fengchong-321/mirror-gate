@@ -51,6 +51,7 @@ class MockSuite(Base):
     and contains all the necessary rules and responses for mocking APIs.
     """
     __tablename__ = "mock_suites"
+    __allow_unmapped__ = True  # Allow legacy-style type annotations
 
     id: int = Column(Integer, primary_key=True, index=True)
     name: str = Column(String(MAX_NAME_LENGTH), unique=True, nullable=False)
@@ -81,6 +82,7 @@ class MockRule(Base):
     Rules define conditions that must be met for a mock suite to be applied.
     """
     __tablename__ = "mock_rules"
+    __allow_unmapped__ = True  # Allow legacy-style type annotations
 
     id: int = Column(Integer, primary_key=True, index=True)
     suite_id: int = Column(Integer, ForeignKey("mock_suites.id"), nullable=False, index=True)
@@ -97,6 +99,7 @@ class MockResponse(Base):
     Defines the response to return when a mock suite is matched.
     """
     __tablename__ = "mock_responses"
+    __allow_unmapped__ = True  # Allow legacy-style type annotations
 
     id: int = Column(Integer, primary_key=True, index=True)
     suite_id: int = Column(Integer, ForeignKey("mock_suites.id"), nullable=False, index=True)
@@ -116,6 +119,7 @@ class MockWhitelist(Base):
     Whitelists define which clients/users are allowed to trigger this mock.
     """
     __tablename__ = "mock_whitelists"
+    __allow_unmapped__ = True  # Allow legacy-style type annotations
 
     id: int = Column(Integer, primary_key=True, index=True)
     suite_id: int = Column(Integer, ForeignKey("mock_suites.id"), nullable=False, index=True)
