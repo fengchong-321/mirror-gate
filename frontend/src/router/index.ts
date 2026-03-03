@@ -43,6 +43,18 @@ const router = createRouter({
       name: 'TestCase',
       component: () => import('@/views/testcase/index.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/testcase/create',
+      name: 'TestCaseCreate',
+      component: () => import('@/views/testcase/CaseEditor.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/testcase/:id/edit',
+      name: 'TestCaseEdit',
+      component: () => import('@/views/testcase/CaseEditor.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })

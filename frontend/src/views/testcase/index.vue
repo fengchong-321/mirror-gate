@@ -465,17 +465,14 @@ const resetGroupForm = () => {
 // Create case - navigate to editor
 const handleCreateCase = () => {
   router.push({
-    path: '/testcase/editor',
+    path: '/testcase/create',
     query: { group_id: selectedGroupId.value?.toString() }
   })
 }
 
 // Edit case - navigate to editor
 const handleEditCase = (row: TestCase) => {
-  router.push({
-    path: '/testcase/editor',
-    query: { id: row.id.toString() }
-  })
+  router.push(`/testcase/${row.id}/edit`)
 }
 
 // Copy case
