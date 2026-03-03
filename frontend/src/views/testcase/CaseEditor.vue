@@ -91,10 +91,8 @@
           <span class="card-title">测试内容</span>
         </template>
         <el-form-item label="前置条件">
-          <el-input
+          <RichTextEditor
             v-model="formData.preconditions"
-            type="textarea"
-            :rows="4"
             placeholder="请输入前置条件"
           />
         </el-form-item>
@@ -168,10 +166,8 @@
         </el-form-item>
 
         <el-form-item label="预期结果">
-          <el-input
+          <RichTextEditor
             v-model="formData.expected_result"
-            type="textarea"
-            :rows="4"
             placeholder="请输入整体预期结果"
           />
         </el-form-item>
@@ -237,6 +233,7 @@ import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ArrowLeft, Plus } from '@element-plus/icons-vue'
 import { testcaseApi, type TestStep } from '@/api/testcase'
+import RichTextEditor from '@/components/RichTextEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
