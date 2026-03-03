@@ -177,7 +177,21 @@ export const testcaseApi = {
     `/api/v1/testcase/attachments/${attachmentId}/download`,
 
   deleteAttachment: (attachmentId: number) =>
-    api.delete(`/testcase/attachments/${attachmentId}`)
+    api.delete(`/testcase/attachments/${attachmentId}`),
+
+  // Import/Export operations
+  exportCases: (groupId: number) =>
+    api.get(`/testcase/groups/${groupId}/export`, { responseType: 'blob' }),
+
+  importCases: (groupId: number, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post<{ success: number; failed: number; errors: string[] }>(
+      `/testcase/groups/${groupId}/import`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+  }
 }
 
 export default testcaseApi

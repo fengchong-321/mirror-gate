@@ -85,6 +85,20 @@
                 >
                   新建用例
                 </el-button>
+                <el-button
+                  :disabled="!selectedGroupId"
+                  @click="handleExport"
+                >
+                  导出
+                </el-button>
+                <el-upload
+                  :show-file-list="false"
+                  :before-upload="handleImport"
+                  accept=".json"
+                  :disabled="!selectedGroupId"
+                >
+                  <el-button :disabled="!selectedGroupId">导入</el-button>
+                </el-upload>
                 <el-dropdown trigger="click" class="column-dropdown">
                   <el-button>
                     列设置
@@ -541,6 +555,46 @@ const handleDeleteCase = async (row: TestCase) => {
       ElMessage.error('删除失败')
     }
   }
+}
+
+// Export cases
+const handleExport = async () => {
+  if (!selectedGroupId.value) return
+
+  try {
+    const response = await testcaseApi.exportCases(selectedGroupId.value)
+    // Create download link
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `testcases_${selectedGroupId.value}.json`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch (error) {
+    ElMessage.error('导出失败')
+  }
+}
+
+// Import cases
+const handleImport = async (file: File) => {
+  if (!selectedGroupId.value) return false
+
+  try {
+    const result = await testcaseApi.importCases(selectedGroupId.value, file)
+    if (result.data.failed > 0) {
+      ElMessage.warning(`导入完成：成功 ${result.data.success} 个，失败 ${result.data.failed} 个`)
+    } else {
+      ElMessage.success(`导入成功：${result.data.success} 个用例`)
+    }
+    loadCases()
+    loadTree()
+  } catch (error) {
+    ElMessage.error('导入失败')
+  }
+  return false // Prevent default upload behavior
 }
 
 // Tag helpers
