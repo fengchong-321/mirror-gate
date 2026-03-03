@@ -125,9 +125,7 @@
 
         <!-- Attachment Tab -->
         <el-tab-pane label="附件" name="attachment">
-          <div class="attachment-content">
-            <el-empty description="附件功能暂未开放，敬请期待" />
-          </div>
+          <AttachmentList :case-id="caseId!" />
         </el-tab-pane>
 
         <!-- Comment Tab -->
@@ -297,6 +295,7 @@ import {
   type TestCaseComment,
   type TestCaseHistory
 } from '@/api/testcase'
+import AttachmentList from './components/AttachmentList.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -662,10 +661,6 @@ onMounted(() => {
 .tag-item {
   margin-right: 8px;
   margin-bottom: 8px;
-}
-
-.attachment-content {
-  padding: 40px 0;
 }
 
 .comment-content {

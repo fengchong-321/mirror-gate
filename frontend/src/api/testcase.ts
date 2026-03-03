@@ -167,7 +167,17 @@ export const testcaseApi = {
     api.post<TestCaseComment>(`/testcase/cases/${caseId}/comments`, data),
 
   deleteComment: (id: number) =>
-    api.delete(`/testcase/comments/${id}`)
+    api.delete(`/testcase/comments/${id}`),
+
+  // Attachment operations
+  getAttachments: (caseId: number) =>
+    api.get<TestCaseAttachment[]>(`/testcase/cases/${caseId}/attachments`),
+
+  getAttachmentDownloadUrl: (attachmentId: number) =>
+    `/api/v1/testcase/attachments/${attachmentId}/download`,
+
+  deleteAttachment: (attachmentId: number) =>
+    api.delete(`/testcase/attachments/${attachmentId}`)
 }
 
 export default testcaseApi
