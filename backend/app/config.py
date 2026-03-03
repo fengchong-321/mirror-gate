@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
@@ -7,6 +8,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "MirrorGate"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
+    SECRET_KEY: str = "your-secret-key-change-in-production-use-openssl-rand-hex-32"
 
     # Database
     MYSQL_HOST: str = "localhost"
@@ -19,6 +21,18 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
+
+    # Email (optional)
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    EMAIL_FROM: Optional[str] = None
+
+    # File Upload
+    UPLOAD_DIR: str = "uploads"
+    MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
+    ALLOWED_EXTENSIONS: list = [".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"]
 
     @property
     def database_url(self) -> str:

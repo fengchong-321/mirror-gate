@@ -4,12 +4,18 @@ This module defines the REST API endpoints for testcase management,
 including groups, cases, and comments.
 """
 
+import os
+import uuid
+from pathlib import Path
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.database import get_db
+from app.models.testcase import TestCase, TestCaseAttachment
 from app.services.testcase_service import TestCaseService
 from app.schemas.testcase import (
     TestCaseGroupCreate,
@@ -23,6 +29,7 @@ from app.schemas.testcase import (
     TestCaseDetailResponse,
     TestCaseCommentCreate,
     TestCaseCommentResponse,
+    TestCaseAttachmentResponse,
     TreeNode,
     BatchMoveRequest,
     BatchDeleteRequest,
@@ -502,3 +509,192 @@ def delete_comment(
     if not success:
         raise HTTPException(status_code=404, detail=f"Comment with id {comment_id} not found")
     return None
+
+
+# ============ Attachment API Endpoints ============
+
+@router.post(
+    "/cases/{case_id}/attachments",
+    response_model=TestCaseAttachmentResponse,
+    status_code=201,
+    summary="Upload an attachment",
+    description="Upload a file attachment to a test case.",
+)
+async def upload_attachment(
+    case_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    uploaded_by: Optional[str] = Query(None, description="Username of the uploader"),
+):
+    """Upload an attachment to a test case.
+
+    Args:
+        case_id: ID of the test case.
+        file: The file to upload.
+        db: Database session.
+        uploaded_by: Username of the uploader.
+
+    Returns:
+        The created attachment record.
+
+    Raises:
+        HTTPException: 404 if case not found, 400 if file validation fails.
+    """
+    settings = get_settings()
+
+    # 1. Check if the test case exists
+    case = db.query(TestCase).filter(TestCase.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=404, detail=f"Case with id {case_id} not found")
+
+    # 2. Check file extension
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in settings.ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File type {file_ext} is not allowed. Allowed types: {', '.join(settings.ALLOWED_EXTENSIONS)}"
+        )
+
+    # 3. Read file content and check size
+    content = await file.read()
+    if len(content) > settings.MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File size exceeds maximum allowed size of {settings.MAX_FILE_SIZE // (1024 * 1024)}MB"
+        )
+
+    # 4. Generate unique filename and save path
+    unique_filename = f"{uuid.uuid4()}{file_ext}"
+    upload_dir = Path(settings.UPLOAD_DIR) / "testcase" / str(case_id)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    file_path = upload_dir / unique_filename
+
+    # 5. Save file to disk
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    # 6. Create database record
+    attachment = TestCaseAttachment(
+        case_id=case_id,
+        filename=file.filename,
+        file_path=str(file_path),
+        file_size=len(content),
+        mime_type=file.content_type,
+        uploaded_by=uploaded_by,
+    )
+    db.add(attachment)
+    db.commit()
+    db.refresh(attachment)
+
+    return TestCaseAttachmentResponse.model_validate(attachment)
+
+
+@router.get(
+    "/cases/{case_id}/attachments",
+    response_model=List[TestCaseAttachmentResponse],
+    summary="Get case attachments",
+    description="Retrieve all attachments for a specific test case.",
+)
+def get_attachments(
+    case_id: int,
+    db: Session = Depends(get_db),
+):
+    """Get all attachments for a test case.
+
+    Args:
+        case_id: ID of the test case.
+        db: Database session.
+
+    Returns:
+        List of attachments for the case.
+
+    Raises:
+        HTTPException: 404 if case not found.
+    """
+    # Check if the test case exists
+    case = db.query(TestCase).filter(TestCase.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=404, detail=f"Case with id {case_id} not found")
+
+    attachments = db.query(TestCaseAttachment).filter(
+        TestCaseAttachment.case_id == case_id
+    ).all()
+    return [TestCaseAttachmentResponse.model_validate(a) for a in attachments]
+
+
+@router.get(
+    "/attachments/{attachment_id}/download",
+    summary="Download an attachment",
+    description="Download a specific attachment file.",
+)
+async def download_attachment(
+    attachment_id: int,
+    db: Session = Depends(get_db),
+):
+    """Download an attachment file.
+
+    Args:
+        attachment_id: ID of the attachment.
+        db: Database session.
+
+    Returns:
+        FileResponse with the file content.
+
+    Raises:
+        HTTPException: 404 if attachment not found or file not found on disk.
+    """
+    attachment = db.query(TestCaseAttachment).filter(
+        TestCaseAttachment.id == attachment_id
+    ).first()
+    if not attachment:
+        raise HTTPException(status_code=404, detail=f"Attachment with id {attachment_id} not found")
+
+    file_path = Path(attachment.file_path)
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found on server")
+
+    return FileResponse(
+        path=file_path,
+        filename=attachment.filename,
+        media_type=attachment.mime_type or "application/octet-stream",
+    )
+
+
+@router.delete(
+    "/attachments/{attachment_id}",
+    status_code=200,
+    summary="Delete an attachment",
+    description="Delete an attachment by ID.",
+)
+def delete_attachment(
+    attachment_id: int,
+    db: Session = Depends(get_db),
+):
+    """Delete an attachment by ID.
+
+    Args:
+        attachment_id: ID of the attachment to delete.
+        db: Database session.
+
+    Returns:
+        Success message.
+
+    Raises:
+        HTTPException: 404 if attachment not found.
+    """
+    attachment = db.query(TestCaseAttachment).filter(
+        TestCaseAttachment.id == attachment_id
+    ).first()
+    if not attachment:
+        raise HTTPException(status_code=404, detail=f"Attachment with id {attachment_id} not found")
+
+    # Delete physical file
+    file_path = Path(attachment.file_path)
+    if file_path.exists():
+        file_path.unlink()
+
+    # Delete database record
+    db.delete(attachment)
+    db.commit()
+
+    return {"message": "删除成功"}
