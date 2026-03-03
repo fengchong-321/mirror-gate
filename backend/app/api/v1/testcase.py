@@ -6,11 +6,13 @@ including groups, cases, and comments.
 
 import os
 import uuid
+import json
+from io import BytesIO
 from pathlib import Path
 from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -698,3 +700,83 @@ def delete_attachment(
     db.commit()
 
     return {"message": "删除成功"}
+
+
+# ============ Import/Export API Endpoints ============
+
+@router.get(
+    "/groups/{group_id}/export",
+    summary="Export test cases",
+    description="Export all test cases from a group as a JSON file.",
+)
+def export_cases(
+    group_id: int,
+    service: TestCaseService = Depends(get_testcase_service),
+):
+    """Export test cases from a group as a JSON file.
+
+    Args:
+        group_id: ID of the group to export.
+        service: TestCaseService instance.
+
+    Returns:
+        StreamingResponse with JSON file download.
+
+    Raises:
+        HTTPException: 404 if group not found.
+    """
+    data = service.export_cases(group_id)
+
+    content = json.dumps(data, ensure_ascii=False, indent=2)
+    return StreamingResponse(
+        iter([content]),
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f"attachment; filename=testcases_{group_id}.json"
+        },
+    )
+
+
+@router.post(
+    "/groups/{group_id}/import",
+    summary="Import test cases",
+    description="Import test cases from a JSON file into a group.",
+)
+async def import_cases(
+    group_id: int,
+    file: UploadFile = File(...),
+    service: TestCaseService = Depends(get_testcase_service),
+    created_by: Optional[str] = Query(None, description="Username of the importer"),
+):
+    """Import test cases from a JSON file into a group.
+
+    Args:
+        group_id: ID of the target group.
+        file: JSON file containing test cases.
+        service: TestCaseService instance.
+        created_by: Username of the importer.
+
+    Returns:
+        Dictionary with import results.
+
+    Raises:
+        HTTPException: 400 if file format is invalid, 404 if group not found.
+    """
+    # Validate file extension
+    if not file.filename or not file.filename.endswith(".json"):
+        raise HTTPException(status_code=400, detail="Only JSON format files are supported")
+
+    # Read and parse file content
+    content = await file.read()
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON format: {str(e)}")
+
+    # Validate data structure
+    if not isinstance(data, list):
+        raise HTTPException(status_code=400, detail="JSON file must be an array format")
+
+    # Import cases
+    result = service.import_cases(group_id, data, created_by=created_by)
+    return result

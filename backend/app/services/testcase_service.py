@@ -5,7 +5,7 @@ CRUD operations for groups, cases, comments, and history tracking.
 """
 
 from datetime import datetime, timezone
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -583,3 +583,120 @@ class TestCaseService:
             created_at=datetime.now(timezone.utc),
         )
         self.db.add(history)
+
+    # ============ Import/Export Methods ============
+
+    def export_cases(self, group_id: int) -> List[Dict]:
+        """Export test cases as a list of dictionaries.
+
+        Args:
+            group_id: The ID of the group to export.
+
+        Returns:
+            List of dictionaries representing test cases.
+
+        Raises:
+            HTTPException: If the group is not found.
+        """
+        group = self.get_group(group_id)
+        if not group:
+            raise HTTPException(status_code=404, detail=f"Group with id {group_id} not found")
+
+        cases = self.get_cases_by_group(group_id, 0, 10000)
+        return [self._case_to_dict(c) for c in cases]
+
+    def _case_to_dict(self, case: TestCase) -> Dict:
+        """Convert a TestCase instance to a dictionary.
+
+        Args:
+            case: The TestCase instance to convert.
+
+        Returns:
+            Dictionary representation of the test case.
+        """
+        return {
+            "title": case.title,
+            "case_type": case.case_type.value if case.case_type else None,
+            "platform": case.platform.value if case.platform else None,
+            "priority": case.priority.value if case.priority else None,
+            "status": case.status.value if case.status else None,
+            "preconditions": case.preconditions,
+            "steps": case.steps,
+            "expected_result": case.expected_result,
+            "tags": case.tags,
+        }
+
+    def import_cases(
+        self, group_id: int, data: List[Dict], created_by: Optional[str] = None
+    ) -> Dict:
+        """Import test cases from a list of dictionaries.
+
+        Args:
+            group_id: The ID of the target group.
+            data: List of dictionaries representing test cases.
+            created_by: Username of the importer.
+
+        Returns:
+            Dictionary with import results (success count, failed count, errors).
+
+        Raises:
+            HTTPException: If the group is not found.
+        """
+        group = self.get_group(group_id)
+        if not group:
+            raise HTTPException(status_code=404, detail=f"Group with id {group_id} not found")
+
+        success = 0
+        failed = 0
+        errors = []
+
+        for i, item in enumerate(data):
+            try:
+                # Parse enum values with defaults
+                case_type = CaseType.FUNCTIONAL
+                if item.get("case_type"):
+                    try:
+                        case_type = CaseType(item["case_type"])
+                    except ValueError:
+                        pass
+
+                platform = Platform.WEB
+                if item.get("platform"):
+                    try:
+                        platform = Platform(item["platform"])
+                    except ValueError:
+                        pass
+
+                priority = Priority.MEDIUM
+                if item.get("priority"):
+                    try:
+                        priority = Priority(item["priority"])
+                    except ValueError:
+                        pass
+
+                status = CaseStatus.DRAFT
+                if item.get("status"):
+                    try:
+                        status = CaseStatus(item["status"])
+                    except ValueError:
+                        pass
+
+                case_data = TestCaseCreate(
+                    group_id=group_id,
+                    title=item.get("title", f"Imported Case {i + 1}"),
+                    case_type=case_type,
+                    platform=platform,
+                    priority=priority,
+                    status=status,
+                    preconditions=item.get("preconditions"),
+                    steps=item.get("steps"),
+                    expected_result=item.get("expected_result"),
+                    tags=item.get("tags"),
+                )
+                self.create_case(case_data, created_by)
+                success += 1
+            except Exception as e:
+                failed += 1
+                errors.append(f"Row {i + 1}: {str(e)}")
+
+        return {"success": success, "failed": failed, "errors": errors}
