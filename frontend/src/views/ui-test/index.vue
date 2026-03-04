@@ -175,7 +175,7 @@
           <el-switch v-model="caseForm.is_enabled" />
         </el-form-item>
         <el-divider content-position="left">Gherkin特征文件</el-divider>
-        <el-form-item label="Feature">
+        <el-form-item label="特性描述">
           <el-input
             v-model="caseForm.feature_content"
             type="textarea"
