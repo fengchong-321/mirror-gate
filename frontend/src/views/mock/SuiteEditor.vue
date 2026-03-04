@@ -2,7 +2,7 @@
   <el-dialog
     :model-value="visible"
     @update:model-value="handleClose"
-    :title="mode === 'create' ? 'Create Mock Suite' : 'Edit Mock Suite'"
+    :title="mode === 'create' ? '新建 Mock 套件' : '编辑 Mock 套件'"
     width="800px"
     :close-on-click-modal="false"
   >
@@ -15,37 +15,37 @@
     >
       <el-row :gutter="20">
         <el-col :span="12">
-          <el-form-item label="Name" prop="name">
-            <el-input v-model="form.name" placeholder="Enter suite name" />
+          <el-form-item label="名称" prop="name">
+            <el-input v-model="form.name" placeholder="请输入套件名称" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="Match Type" prop="match_type">
+          <el-form-item label="匹配类型" prop="match_type">
             <el-select v-model="form.match_type" style="width: 100%">
-              <el-option label="Match Any" value="any" />
-              <el-option label="Match All" value="all" />
+              <el-option label="满足任一" value="any" />
+              <el-option label="满足全部" value="all" />
             </el-select>
           </el-form-item>
         </el-col>
       </el-row>
 
-      <el-form-item label="Description" prop="description">
+      <el-form-item label="描述" prop="description">
         <el-input
           v-model="form.description"
           type="textarea"
           :rows="2"
-          placeholder="Enter description"
+          placeholder="请输入描述"
         />
       </el-form-item>
 
       <el-row :gutter="20">
         <el-col :span="12">
-          <el-form-item label="Enabled">
+          <el-form-item label="启用">
             <el-switch v-model="form.is_enabled" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="Enable Compare">
+          <el-form-item label="开启对比">
             <el-switch v-model="form.enable_compare" />
           </el-form-item>
         </el-col>
@@ -55,33 +55,33 @@
 
       <el-tabs v-model="activeTab">
         <!-- Rules Tab -->
-        <el-tab-pane label="Rules" name="rules">
+        <el-tab-pane label="规则" name="rules">
           <div class="tab-header">
             <el-button type="primary" size="small" @click="addRule">
-              Add Rule
+              添加规则
             </el-button>
           </div>
           <el-table :data="form.rules" border size="small">
-            <el-table-column label="Field" min-width="150">
+            <el-table-column label="字段" min-width="150">
               <template #default="{ row, $index }">
-                <el-input v-model="row.field" placeholder="e.g., headers.x-user-id" />
+                <el-input v-model="row.field" placeholder="如: headers.x-user-id" />
               </template>
             </el-table-column>
-            <el-table-column label="Operator" width="140">
+            <el-table-column label="操作符" width="140">
               <template #default="{ row }">
                 <el-select v-model="row.operator" style="width: 100%">
-                  <el-option label="Equals" value="equals" />
-                  <el-option label="Contains" value="contains" />
-                  <el-option label="Not Equals" value="not_equals" />
+                  <el-option label="等于" value="equals" />
+                  <el-option label="包含" value="contains" />
+                  <el-option label="不等于" value="not_equals" />
                 </el-select>
               </template>
             </el-table-column>
-            <el-table-column label="Value" min-width="150">
+            <el-table-column label="值" min-width="150">
               <template #default="{ row }">
-                <el-input v-model="row.value" placeholder="Value to match" />
+                <el-input v-model="row.value" placeholder="匹配值" />
               </template>
             </el-table-column>
-            <el-table-column label="Actions" width="80">
+            <el-table-column label="操作" width="80">
               <template #default="{ $index }">
                 <el-button
                   type="danger"
@@ -96,10 +96,10 @@
         </el-tab-pane>
 
         <!-- Responses Tab -->
-        <el-tab-pane label="Responses" name="responses">
+        <el-tab-pane label="响应" name="responses">
           <div class="tab-header">
             <el-button type="primary" size="small" @click="addResponse">
-              Add Response
+              添加响应
             </el-button>
           </div>
           <el-table
@@ -109,12 +109,12 @@
             highlight-current-row
             @current-change="(row) => { if (row) selectedResponseIndex = form.responses.indexOf(row) }"
           >
-            <el-table-column label="Path" min-width="150">
+            <el-table-column label="路径" min-width="150">
               <template #default="{ row }">
                 <el-input v-model="row.path" placeholder="/api/example" />
               </template>
             </el-table-column>
-            <el-table-column label="Method" width="120">
+            <el-table-column label="方法" width="120">
               <template #default="{ row }">
                 <el-select v-model="row.method" style="width: 100%">
                   <el-option label="GET" value="GET" />
@@ -125,17 +125,17 @@
                 </el-select>
               </template>
             </el-table-column>
-            <el-table-column label="Timeout(ms)" width="120">
+            <el-table-column label="超时(ms)" width="120">
               <template #default="{ row }">
                 <el-input-number v-model="row.timeout_ms" :min="0" size="small" />
               </template>
             </el-table-column>
-            <el-table-column label="Empty Resp" width="100">
+            <el-table-column label="空响应" width="100">
               <template #default="{ row }">
                 <el-switch v-model="row.empty_response" size="small" />
               </template>
             </el-table-column>
-            <el-table-column label="Actions" width="80">
+            <el-table-column label="操作" width="80">
               <template #default="{ $index }">
                 <el-button
                   type="danger"
@@ -180,28 +180,28 @@
         </el-tab-pane>
 
         <!-- Whitelists Tab -->
-        <el-tab-pane label="Whitelists" name="whitelists">
+        <el-tab-pane label="白名单" name="whitelists">
           <div class="tab-header">
             <el-button type="primary" size="small" @click="addWhitelist">
-              Add Whitelist
+              添加白名单
             </el-button>
           </div>
           <el-table :data="form.whitelists" border size="small">
-            <el-table-column label="Type" width="140">
+            <el-table-column label="类型" width="140">
               <template #default="{ row }">
                 <el-select v-model="row.type" style="width: 100%">
-                  <el-option label="Client ID" value="clientId" />
-                  <el-option label="User ID" value="userId" />
-                  <el-option label="VID" value="vid" />
+                  <el-option label="客户端ID" value="clientId" />
+                  <el-option label="用户ID" value="userId" />
+                  <el-option label="访客ID" value="vid" />
                 </el-select>
               </template>
             </el-table-column>
-            <el-table-column label="Value" min-width="200">
+            <el-table-column label="值" min-width="200">
               <template #default="{ row }">
-                <el-input v-model="row.value" placeholder="Enter value" />
+                <el-input v-model="row.value" placeholder="请输入值" />
               </template>
             </el-table-column>
-            <el-table-column label="Actions" width="80">
+            <el-table-column label="操作" width="80">
               <template #default="{ $index }">
                 <el-button
                   type="danger"
@@ -218,9 +218,9 @@
     </el-form>
 
     <template #footer>
-      <el-button @click="handleClose">Cancel</el-button>
+      <el-button @click="handleClose">取消</el-button>
       <el-button type="primary" @click="handleSave" :loading="saving">
-        Save
+        保存
       </el-button>
     </template>
   </el-dialog>
@@ -283,10 +283,10 @@ const form = ref<Partial<MockSuite>>(getDefaultForm())
 
 const rules: FormRules = {
   name: [
-    { required: true, message: 'Please enter suite name', trigger: 'blur' }
+    { required: true, message: '请输入套件名称', trigger: 'blur' }
   ],
   match_type: [
-    { required: true, message: 'Please select match type', trigger: 'change' }
+    { required: true, message: '请选择匹配类型', trigger: 'change' }
   ]
 }
 
@@ -306,7 +306,7 @@ const handlePreview = async () => {
     previewResult.value = {
       valid: false,
       formatted: null,
-      error: 'Preview request failed'
+      error: '预览请求失败'
     }
   }
 }
@@ -336,7 +336,7 @@ watch(() => props.visible, async (newVal) => {
         form.value.responses = form.value.responses || []
         form.value.whitelists = form.value.whitelists || []
       } catch (error) {
-        ElMessage.error('Failed to load suite data')
+        ElMessage.error('加载套件数据失败')
       } finally {
         loading.value = false
       }
@@ -407,7 +407,7 @@ const validateJsonFields = (): boolean => {
       try {
         JSON.parse(resp.response_json)
       } catch {
-        ElMessage.error(`Invalid JSON in response for path: ${resp.path}`)
+        ElMessage.error(`响应 JSON 格式无效，路径: ${resp.path}`)
         return false
       }
     }
@@ -415,7 +415,7 @@ const validateJsonFields = (): boolean => {
       try {
         JSON.parse(resp.ab_test_config)
       } catch {
-        ElMessage.error(`Invalid JSON in AB Test Config for path: ${resp.path}`)
+        ElMessage.error(`AB 测试配置 JSON 格式无效，路径: ${resp.path}`)
         return false
       }
     }
@@ -434,7 +434,7 @@ const handleSave = async () => {
   try {
     await formRef.value.validate()
   } catch {
-    ElMessage.warning('Please fill in required fields')
+    ElMessage.warning('请填写必填项')
     return
   }
 
@@ -447,15 +447,15 @@ const handleSave = async () => {
   try {
     if (props.mode === 'create') {
       await mockApi.createSuite(form.value)
-      ElMessage.success('Created successfully')
+      ElMessage.success('创建成功')
     } else if (props.suite) {
       await mockApi.updateSuite(props.suite.id, form.value)
-      ElMessage.success('Updated successfully')
+      ElMessage.success('更新成功')
     }
     emit('saved')
     handleClose()
   } catch (error) {
-    ElMessage.error('Failed to save suite')
+    ElMessage.error('保存套件失败')
   } finally {
     saving.value = false
   }
