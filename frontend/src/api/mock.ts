@@ -48,6 +48,16 @@ export interface MockSuiteListResponse {
   items: MockSuite[]
 }
 
+export interface MockPreviewRequest {
+  response_json: string
+}
+
+export interface MockPreviewResponse {
+  valid: boolean
+  formatted: string | null
+  error: string | null
+}
+
 export const mockApi = {
   getSuites: (skip = 0, limit = 100) =>
     api.get<MockSuiteListResponse>('/mock/suites', { params: { skip, limit } }),
@@ -60,7 +70,9 @@ export const mockApi = {
   deleteSuite: (id: number) =>
     api.delete(`/mock/suites/${id}`),
   copySuite: (id: number, newName: string) =>
-    api.post<MockSuite>(`/mock/suites/${id}/copy`, null, { params: { new_name: newName } })
+    api.post<MockSuite>(`/mock/suites/${id}/copy`, null, { params: { new_name: newName } }),
+  previewResponse: (data: MockPreviewRequest) =>
+    api.post<MockPreviewResponse>('/mock/preview', data),
 }
 
 export default mockApi
