@@ -148,13 +148,27 @@
             </el-table-column>
           </el-table>
           <div v-if="form.responses.length > 0 && form.responses[selectedResponseIndex]" class="response-detail">
-            <el-divider content-position="left">Response JSON</el-divider>
-            <el-input
-              v-model="form.responses[selectedResponseIndex].response_json"
-              type="textarea"
-              :rows="8"
-              placeholder='{"code": 0, "data": {}}'
-            />
+            <div class="response-editor">
+              <div class="editor-panel">
+                <div class="panel-header">Response JSON</div>
+                <el-input
+                  v-model="form.responses[selectedResponseIndex].response_json"
+                  type="textarea"
+                  :rows="12"
+                  placeholder='{"code": 0, "data": {}}'
+                  @input="handlePreviewDebounced"
+                />
+              </div>
+              <div class="preview-panel">
+                <div class="panel-header">
+                  Preview
+                  <el-tag v-if="previewResult.valid" type="success" size="small">Valid</el-tag>
+                  <el-tag v-else type="danger" size="small">Invalid</el-tag>
+                </div>
+                <pre v-if="previewResult.valid" class="preview-content">{{ previewResult.formatted }}</pre>
+                <div v-else class="preview-error">{{ previewResult.error }}</div>
+              </div>
+            </div>
             <el-divider content-position="left">AB Test Config (Optional)</el-divider>
             <el-input
               v-model="form.responses[selectedResponseIndex].ab_test_config"
@@ -213,9 +227,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { Delete } from '@element-plus/icons-vue'
+import { debounce } from 'lodash-es'
 import {
   mockApi,
   type MockSuite,
@@ -242,6 +257,17 @@ const saving = ref(false)
 const activeTab = ref('rules')
 const selectedResponseIndex = ref(0)
 
+// Preview state
+const previewResult = ref<{
+  valid: boolean
+  formatted: string | null
+  error: string | null
+}>({
+  valid: true,
+  formatted: '{}',
+  error: null
+})
+
 const getDefaultForm = (): Partial<MockSuite> => ({
   name: '',
   description: '',
@@ -266,6 +292,32 @@ const rules: FormRules = {
 
 const hasResponses = computed(() => form.value.responses && form.value.responses.length > 0)
 
+// Preview functions
+const handlePreview = async () => {
+  const currentResponse = form.value.responses?.[selectedResponseIndex.value]
+  if (!currentResponse) return
+
+  try {
+    const response = await mockApi.previewResponse({
+      response_json: currentResponse.response_json || ''
+    })
+    previewResult.value = response.data
+  } catch {
+    previewResult.value = {
+      valid: false,
+      formatted: null,
+      error: 'Preview request failed'
+    }
+  }
+}
+
+const handlePreviewDebounced = debounce(handlePreview, 300)
+
+// Watch for response index changes to update preview
+watch(selectedResponseIndex, () => {
+  handlePreview()
+})
+
 watch(() => props.visible, async (newVal) => {
   if (newVal) {
     if (props.suite) {
@@ -289,6 +341,10 @@ watch(() => props.visible, async (newVal) => {
     }
     selectedResponseIndex.value = 0
     activeTab.value = 'rules'
+    // Initialize preview
+    nextTick(() => {
+      handlePreview()
+    })
   }
 })
 
@@ -408,5 +464,58 @@ const handleSave = async () => {
 
 .response-detail {
   margin-top: 16px;
+}
+
+.response-editor {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.editor-panel,
+.preview-panel {
+  flex: 1;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-bottom: 1px solid #dcdfe6;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.editor-panel .el-textarea {
+  border: none;
+}
+
+.editor-panel :deep(.el-textarea__inner) {
+  border: none;
+  border-radius: 0;
+  resize: none;
+}
+
+.preview-content {
+  padding: 12px;
+  margin: 0;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  background: #fafafa;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.preview-error {
+  padding: 12px;
+  color: #f56c6c;
+  font-size: 13px;
 }
 </style>
