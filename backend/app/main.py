@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import get_settings
 from app.api.v1 import mock, api_test, ui_test, auth, scheduler, dashboard, testcase, mock_compare
-from app.services.mock_interceptor import MockInterceptor
+from app.services.mock_interceptor import MockInterceptor, MockCompareTool
 from app.database import SessionLocal
+from typing import Optional
 import asyncio
 import json
+import httpx
 
 settings = get_settings()
 
@@ -25,6 +27,53 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+async def compare_and_save(
+    suite_id: int,
+    method: str,
+    path: str,
+    mock_response: str,
+    real_url: str,
+    headers: dict,
+    body: Optional[str],
+):
+    """Async function to request real API and save comparison record."""
+    from app.models.mock_compare import MockCompareRecord
+
+    db = SessionLocal()
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # Filter headers to remove hop-by-hop headers and host
+            filtered_headers = {
+                k: v for k, v in headers.items()
+                if k.lower() not in ("host", "content-length", "transfer-encoding")
+            }
+            response = await client.request(
+                method=method,
+                url=real_url,
+                headers=filtered_headers,
+                content=body,
+            )
+            real_response = response.text
+
+        result = MockCompareTool.compare_responses(mock_response, real_response)
+
+        record = MockCompareRecord(
+            suite_id=suite_id,
+            path=path,
+            method=method,
+            mock_response=mock_response,
+            real_response=real_response,
+            differences=result["differences"],
+            is_match=result["match"],
+        )
+        db.add(record)
+        db.commit()
+    except Exception as e:
+        print(f"Compare error: {e}")
+    finally:
+        db.close()
 
 
 @app.middleware("http")
@@ -70,6 +119,27 @@ async def mock_interceptor_middleware(request: Request, call_next):
         )
 
         if mock_response:
+            # Check if compare is enabled and trigger async comparison
+            if mock_response.get("enable_compare") and mock_response.get("suite_id"):
+                try:
+                    # Reconstruct the real URL for comparison
+                    # Use the original request URL without modifications
+                    real_url = str(request.url)
+
+                    asyncio.create_task(
+                        compare_and_save(
+                            suite_id=mock_response["suite_id"],
+                            method=request.method,
+                            path=request.url.path,
+                            mock_response=mock_response.get("body", "{}"),
+                            real_url=real_url,
+                            headers=dict(request.headers),
+                            body=body,
+                        )
+                    )
+                except Exception as e:
+                    print(f"Failed to trigger compare: {e}")
+
             # Simulate delay
             if mock_response.get("delay_ms", 0) > 0:
                 await asyncio.sleep(mock_response["delay_ms"] / 1000)

@@ -4,9 +4,12 @@
       <template #header>
         <div class="card-header">
           <span>Mock Suite</span>
-          <el-button type="primary" @click="handleCreate">
-            Create Suite
-          </el-button>
+          <div class="header-actions">
+            <el-button @click="goToCompare">对比记录</el-button>
+            <el-button type="primary" @click="handleCreate">
+              Create Suite
+            </el-button>
+          </div>
         </div>
       </template>
 
@@ -103,10 +106,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import SuiteEditor from './SuiteEditor.vue'
 import { mockApi, type MockSuite } from '@/api/mock'
 
+const router = useRouter()
 const tableData = ref<MockSuite[]>([])
 const loading = ref(false)
 const currentPage = ref(1)
@@ -205,6 +210,10 @@ const handleSaved = () => {
   fetchData()
 }
 
+const goToCompare = () => {
+  router.push('/mock/compare')
+}
+
 onMounted(() => {
   fetchData()
 })
@@ -219,6 +228,11 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
 }
 
 .pagination-container {

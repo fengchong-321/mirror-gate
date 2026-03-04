@@ -71,7 +71,10 @@ class MockInterceptor:
             # Find matching response
             response = self._find_response(suite, method, path)
             if response:
-                return self._build_response(response)
+                result = self._build_response(response)
+                result["suite_id"] = suite.id
+                result["enable_compare"] = suite.enable_compare
+                return result
 
         return None
 
