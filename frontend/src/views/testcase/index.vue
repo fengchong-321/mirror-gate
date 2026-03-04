@@ -496,7 +496,8 @@ const handleCreateCase = () => {
 
 // Edit case - navigate to editor
 const handleEditCase = (row: TestCase) => {
-  router.push(`/testcase/${row.id}/edit`)
+  const formattedId = String(row.id).padStart(7, '0')
+  router.push(`/testcase/${formattedId}/edit`)
 }
 
 // Copy case
