@@ -3,9 +3,9 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>Compare Records</span>
+          <span>对比记录</span>
           <el-button type="primary" @click="handleManualCompare">
-            Manual Compare
+            手动对比
           </el-button>
         </div>
       </template>
@@ -14,7 +14,7 @@
       <div class="filter-container">
         <el-select
           v-model="filters.suite_id"
-          placeholder="Select Suite"
+          placeholder="选择套件"
           clearable
           style="width: 200px"
           @change="fetchData"
@@ -29,13 +29,13 @@
 
         <el-select
           v-model="filters.is_match"
-          placeholder="Match Status"
+          placeholder="匹配状态"
           clearable
           style="width: 150px; margin-left: 10px"
           @change="fetchData"
         >
-          <el-option label="Matched" :value="true" />
-          <el-option label="Mismatched" :value="false" />
+          <el-option label="一致" :value="true" />
+          <el-option label="有差异" :value="false" />
         </el-select>
 
         <el-button
@@ -43,7 +43,7 @@
           style="margin-left: 10px"
           @click="resetFilters"
         >
-          Reset
+          重置
         </el-button>
       </div>
 
@@ -55,34 +55,34 @@
         style="width: 100%; margin-top: 20px"
       >
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="suite_id" label="Suite ID" width="100" />
-        <el-table-column prop="path" label="Path" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="method" label="Method" width="100">
+        <el-table-column prop="suite_id" label="套件ID" width="100" />
+        <el-table-column prop="path" label="路径" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="method" label="方法" width="100">
           <template #default="{ row }">
             <el-tag size="small" :type="getMethodType(row.method)">
               {{ row.method }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="is_match" label="Status" width="120">
+        <el-table-column prop="is_match" label="状态" width="120">
           <template #default="{ row }">
             <el-tag :type="row.is_match ? 'success' : 'danger'" size="small">
-              {{ row.is_match ? 'Matched' : 'Mismatched' }}
+              {{ row.is_match ? '一致' : '有差异' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="created_at" label="Created At" width="180">
+        <el-table-column prop="created_at" label="对比时间" width="180">
           <template #default="{ row }">
             {{ formatDate(row.created_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="Actions" width="150" fixed="right">
+        <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleViewDetail(row)">
-              Detail
+              详情
             </el-button>
             <el-button type="danger" size="small" @click="handleDelete(row)">
-              Delete
+              删除
             </el-button>
           </template>
         </el-table-column>
@@ -105,26 +105,26 @@
     <!-- Detail Dialog -->
     <el-dialog
       v-model="detailDialogVisible"
-      title="Compare Record Detail"
+      title="对比记录详情"
       width="90%"
       top="5vh"
     >
       <div v-if="currentRecord" class="detail-content">
         <!-- Basic Info -->
         <div class="info-row">
-          <span class="label">Path:</span>
+          <span class="label">路径:</span>
           <span class="value">{{ currentRecord.path }}</span>
         </div>
         <div class="info-row">
-          <span class="label">Method:</span>
+          <span class="label">方法:</span>
           <el-tag size="small" :type="getMethodType(currentRecord.method)">
             {{ currentRecord.method }}
           </el-tag>
         </div>
         <div class="info-row">
-          <span class="label">Status:</span>
+          <span class="label">状态:</span>
           <el-tag :type="currentRecord.is_match ? 'success' : 'danger'" size="small">
-            {{ currentRecord.is_match ? 'Matched' : 'Mismatched' }}
+            {{ currentRecord.is_match ? '一致' : '有差异' }}
           </el-tag>
         </div>
 
@@ -132,7 +132,7 @@
         <div class="response-comparison">
           <div class="response-panel">
             <div class="panel-header">
-              <h3>Mock Response</h3>
+              <h3>Mock 响应</h3>
             </div>
             <div class="panel-content">
               <pre class="json-display">{{ formatJson(currentRecord.mock_response) }}</pre>
@@ -141,7 +141,7 @@
 
           <div class="response-panel">
             <div class="panel-header">
-              <h3>Real Response</h3>
+              <h3>真实响应</h3>
             </div>
             <div class="panel-content">
               <pre class="json-display">{{ formatJson(currentRecord.real_response) }}</pre>
@@ -151,26 +151,26 @@
 
         <!-- Differences List -->
         <div v-if="currentRecord.differences && currentRecord.differences.length > 0" class="differences-section">
-          <h3>Differences ({{ currentRecord.differences.length }})</h3>
+          <h3>差异列表 ({{ currentRecord.differences.length }})</h3>
           <el-table
             :data="currentRecord.differences"
             stripe
             max-height="300"
           >
-            <el-table-column prop="path" label="Path" min-width="200" />
-            <el-table-column prop="type" label="Type" width="150">
+            <el-table-column prop="path" label="路径" min-width="200" />
+            <el-table-column prop="type" label="类型" width="150">
               <template #default="{ row }">
                 <el-tag size="small" :type="getDiffType(row.type)">
                   {{ row.type }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="Mock Value" min-width="200">
+            <el-table-column label="Mock 值" min-width="200">
               <template #default="{ row }">
                 <code class="value-code">{{ formatValue(row.mock_value) }}</code>
               </template>
             </el-table-column>
-            <el-table-column label="Real Value" min-width="200">
+            <el-table-column label="真实值" min-width="200">
               <template #default="{ row }">
                 <code class="value-code">{{ formatValue(row.real_value) }}</code>
               </template>
@@ -179,7 +179,7 @@
         </div>
 
         <div v-else class="no-differences">
-          <el-empty description="No differences found" />
+          <el-empty description="未发现差异" />
         </div>
       </div>
     </el-dialog>
@@ -187,27 +187,27 @@
     <!-- Manual Compare Dialog -->
     <el-dialog
       v-model="manualCompareVisible"
-      title="Manual Compare"
+      title="手动对比"
       width="800px"
     >
       <el-form :model="manualCompareForm" label-width="140px">
-        <el-form-item label="Mock Response">
+        <el-form-item label="Mock 响应">
           <el-input
             v-model="manualCompareForm.mock_response"
             type="textarea"
             :rows="8"
-            placeholder="Enter mock response JSON"
+            placeholder="请输入 Mock 响应 JSON"
           />
         </el-form-item>
 
-        <el-form-item label="Real API URL">
+        <el-form-item label="真实 API 地址">
           <el-input
             v-model="manualCompareForm.real_api_url"
             placeholder="https://api.example.com/endpoint"
           />
         </el-form-item>
 
-        <el-form-item label="HTTP Method">
+        <el-form-item label="HTTP 方法">
           <el-select v-model="manualCompareForm.real_api_method" style="width: 150px">
             <el-option label="GET" value="GET" />
             <el-option label="POST" value="POST" />
@@ -217,7 +217,7 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="Headers">
+        <el-form-item label="请求头">
           <el-input
             v-model="manualCompareForm.real_api_headers_json"
             type="textarea"
@@ -226,19 +226,19 @@
           />
         </el-form-item>
 
-        <el-form-item label="Request Body">
+        <el-form-item label="请求体">
           <el-input
             v-model="manualCompareForm.real_api_body"
             type="textarea"
             :rows="4"
-            placeholder="Request body for POST/PUT/PATCH"
+            placeholder="POST/PUT/PATCH 请求的请求体"
           />
         </el-form-item>
 
-        <el-form-item label="Suite (Optional)">
+        <el-form-item label="关联套件(可选)">
           <el-select
             v-model="manualCompareForm.suite_id"
-            placeholder="Select Suite (optional)"
+            placeholder="选择套件(可选)"
             clearable
             style="width: 300px"
           >
@@ -253,9 +253,9 @@
       </el-form>
 
       <template #footer>
-        <el-button @click="manualCompareVisible = false">Cancel</el-button>
+        <el-button @click="manualCompareVisible = false">取消</el-button>
         <el-button type="primary" @click="executeManualCompare" :loading="compareLoading">
-          Compare
+          对比
         </el-button>
       </template>
     </el-dialog>
@@ -298,7 +298,7 @@ const fetchSuites = async () => {
     const response = await mockApi.getSuites(0, 1000)
     suites.value = response.data.items
   } catch (error) {
-    console.error('Failed to fetch suites:', error)
+    console.error('获取套件列表失败:', error)
   }
 }
 
@@ -321,7 +321,7 @@ const fetchData = async () => {
     tableData.value = response.data.items
     total.value = response.data.total
   } catch (error) {
-    ElMessage.error('Failed to fetch compare records')
+    ElMessage.error('获取对比记录失败')
   } finally {
     loading.value = false
   }
@@ -383,20 +383,20 @@ const handleViewDetail = (row: MockCompareRecord) => {
 const handleDelete = async (row: MockCompareRecord) => {
   try {
     await ElMessageBox.confirm(
-      `Are you sure you want to delete compare record #${row.id}?`,
-      'Confirm Delete',
+      `确定要删除对比记录 #${row.id} 吗？`,
+      '确认删除',
       {
-        confirmButtonText: 'Delete',
-        cancelButtonText: 'Cancel',
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
         type: 'warning'
       }
     )
     await mockApi.deleteCompareRecord(row.id)
-    ElMessage.success('Deleted successfully')
+    ElMessage.success('删除成功')
     fetchData()
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('Failed to delete compare record')
+      ElMessage.error('删除对比记录失败')
     }
   }
 }
@@ -415,11 +415,11 @@ const handleManualCompare = () => {
 
 const executeManualCompare = async () => {
   if (!manualCompareForm.value.mock_response) {
-    ElMessage.warning('Please enter mock response')
+    ElMessage.warning('请输入 Mock 响应')
     return
   }
   if (!manualCompareForm.value.real_api_url) {
-    ElMessage.warning('Please enter real API URL')
+    ElMessage.warning('请输入真实 API 地址')
     return
   }
 
@@ -430,7 +430,7 @@ const executeManualCompare = async () => {
       try {
         headers = JSON.parse(manualCompareForm.value.real_api_headers_json)
       } catch {
-        ElMessage.error('Invalid headers JSON format')
+        ElMessage.error('请求头 JSON 格式无效')
         return
       }
     }
@@ -444,7 +444,7 @@ const executeManualCompare = async () => {
     }
 
     const response = await mockApi.manualCompare(data, manualCompareForm.value.suite_id)
-    ElMessage.success('Compare completed')
+    ElMessage.success('对比完成')
     manualCompareVisible.value = false
 
     // Show result
@@ -454,7 +454,7 @@ const executeManualCompare = async () => {
     // Refresh list
     fetchData()
   } catch (error) {
-    ElMessage.error('Failed to execute compare')
+    ElMessage.error('执行对比失败')
   } finally {
     compareLoading.value = false
   }
