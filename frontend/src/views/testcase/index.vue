@@ -43,7 +43,6 @@
                 <span class="node-label">
                   <el-icon><Folder /></el-icon>
                   <span>{{ data.label }}</span>
-                  <el-badge :value="data.case_count" :max="99" class="case-count" />
                 </span>
                 <span class="node-actions" @click.stop>
                   <el-dropdown trigger="click">
@@ -123,6 +122,11 @@
 
           <!-- Case Table -->
           <template v-if="selectedGroupId">
+            <!-- Case Stats -->
+            <div class="case-stats">
+              <span>共 {{ totalCases }} 条用例</span>
+            </div>
+
             <el-table
               ref="tableRef"
               :data="caseList"
@@ -159,7 +163,12 @@
                   </template>
                   <template v-else-if="col.prop === 'status'">
                     <el-tag size="small" :type="getStatusTag(row.status)">
-                      {{ getStatusText(row.status) }}
+                      {{ row.status || '-' }}
+                    </el-tag>
+                  </template>
+                  <template v-else-if="col.prop === 'is_core'">
+                    <el-tag size="small" :type="row.is_core ? 'danger' : 'info'">
+                      {{ row.is_core ? '是' : '否' }}
                     </el-tag>
                   </template>
                   <template v-else>
@@ -269,7 +278,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules, TreeInstance } from 'element-plus'
 import { Search, Folder, MoreFilled, ArrowDown } from '@element-plus/icons-vue'
-import { testcaseApi, type TreeNode, type TestCase, type TestCaseGroup } from '@/api/testcase'
+import { testcaseApi, type TreeNode, type TestCase, type TestCaseGroup, CASE_TYPES, PLATFORMS, PRIORITIES, CASE_STATUSES } from '@/api/testcase'
 
 const router = useRouter()
 
@@ -295,17 +304,19 @@ const selectedCases = ref<TestCase[]>([])
 
 // Column configuration
 const allColumns = [
-  { prop: 'code', label: '编号', width: 120 },
+  { prop: 'code', label: '编号', width: 140 },
   { prop: 'title', label: '标题', minWidth: 200 },
-  { prop: 'case_type', label: '类型', width: 100 },
+  { prop: 'case_type', label: '类型', width: 110 },
   { prop: 'platform', label: '平台', width: 100 },
-  { prop: 'priority', label: '优先级', width: 100 },
-  { prop: 'status', label: '状态', width: 100 },
-  { prop: 'created_by', label: '维护人', width: 120 },
-  { prop: 'updated_at', label: '更新时间', width: 180 }
+  { prop: 'priority', label: '重要程度', width: 100 },
+  { prop: 'owner', label: '维护人', width: 100 },
+  { prop: 'developer', label: '开发负责人', width: 100 },
+  { prop: 'is_core', label: '核心用例', width: 90 },
+  { prop: 'status', label: '状态', width: 90 },
+  { prop: 'updated_at', label: '更新时间', width: 170 }
 ]
 
-const visibleColumns = ref(['code', 'title', 'case_type', 'platform', 'priority', 'created_by'])
+const visibleColumns = ref(['code', 'title', 'case_type', 'platform', 'priority', 'owner'])
 
 const displayColumns = computed(() => {
   return allColumns.filter(col => visibleColumns.value.includes(col.prop))
@@ -597,52 +608,49 @@ const handleImport = async (file: File) => {
   return false // Prevent default upload behavior
 }
 
-// Tag helpers
+// Tag helpers - using Chinese enum values from design document
 const getCaseTypeTag = (type?: string) => {
   const types: Record<string, string> = {
-    '功能': 'primary',
-    '性能': 'warning',
-    '安全': 'danger',
-    '兼容': 'info'
+    '功能测试': 'primary',
+    '性能测试': 'warning',
+    '安全测试': 'danger',
+    '兼容性测试': 'info',
+    '用户体验测试': 'success',
+    '其他': ''
   }
   return types[type || ''] || 'info'
 }
 
 const getPlatformTag = (platform?: string) => {
   const types: Record<string, string> = {
+    'RN': 'success',
+    '服务端': 'warning',
+    '小程序': '',
     'Web': 'primary',
-    'iOS': '',
-    'Android': 'success',
-    'API': 'warning'
+    'H5': 'info'
   }
   return types[platform || ''] || 'info'
 }
 
 const getPriorityTag = (priority?: string) => {
   const types: Record<string, string> = {
-    '高': 'danger',
-    '中': 'warning',
-    '低': 'info'
+    'P0': 'danger',
+    'P1': 'warning',
+    'P2': 'primary',
+    'P3': 'info',
+    'P4': ''
   }
   return types[priority || ''] || 'info'
 }
 
 const getStatusTag = (status: string) => {
   const types: Record<string, string> = {
-    'draft': 'info',
-    'active': 'success',
-    'archived': 'warning'
+    '草稿': 'info',
+    '评审中': 'warning',
+    '通过': 'success',
+    '废弃': 'danger'
   }
   return types[status] || 'info'
-}
-
-const getStatusText = (status: string) => {
-  const texts: Record<string, string> = {
-    'draft': '草稿',
-    'active': '活跃',
-    'archived': '归档'
-  }
-  return texts[status] || status
 }
 
 // Initialize
@@ -707,8 +715,12 @@ onMounted(() => {
   gap: 6px;
 }
 
-.case-count {
-  margin-left: 4px;
+.case-stats {
+  padding: 12px 0;
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  margin-bottom: 12px;
 }
 
 .case-list-card {
