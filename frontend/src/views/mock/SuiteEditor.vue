@@ -227,7 +227,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, nextTick } from 'vue'
+import { ref, watch, computed, nextTick, onUnmounted } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { Delete } from '@element-plus/icons-vue'
 import { debounce } from 'lodash-es'
@@ -312,6 +312,11 @@ const handlePreview = async () => {
 }
 
 const handlePreviewDebounced = debounce(handlePreview, 300)
+
+// Cancel pending debounce on component unmount
+onUnmounted(() => {
+  handlePreviewDebounced.cancel()
+})
 
 // Watch for response index changes to update preview
 watch(selectedResponseIndex, () => {
