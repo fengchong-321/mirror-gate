@@ -27,6 +27,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/mock/compare',
+      name: 'MockCompare',
+      component: () => import('@/views/mock/CompareRecords.vue'),
+      meta: { requiresAuth: true, title: '对比记录' }
+    },
+    {
       path: '/api-test',
       name: 'ApiTest',
       component: () => import('@/views/api-test/index.vue'),
