@@ -304,7 +304,6 @@ const selectedCases = ref<TestCase[]>([])
 
 // Column configuration
 const allColumns = [
-  { prop: 'code', label: '编号', width: 140 },
   { prop: 'title', label: '标题', minWidth: 200 },
   { prop: 'case_type', label: '类型', width: 110 },
   { prop: 'platform', label: '平台', width: 100 },
@@ -316,7 +315,7 @@ const allColumns = [
   { prop: 'updated_at', label: '更新时间', width: 170 }
 ]
 
-const visibleColumns = ref(['code', 'title', 'case_type', 'platform', 'priority', 'owner'])
+const visibleColumns = ref(['title', 'case_type', 'platform', 'priority', 'owner'])
 
 const displayColumns = computed(() => {
   return allColumns.filter(col => visibleColumns.value.includes(col.prop))
