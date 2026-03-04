@@ -188,32 +188,24 @@ class TestCaseService:
     def _generate_case_code(self) -> str:
         """Generate a unique test case code.
 
-        Format: TC-YYYYMMDD-NNN (e.g., TC-20260302-001)
+        Format: 7-digit zero-padded number (e.g., 0000001)
 
         Returns:
             A unique test case code string.
         """
-        today = datetime.now(timezone.utc).strftime("%Y%m%d")
-        prefix = f"TC-{today}"
-
-        # Find the highest sequence number for today
+        # Get the highest ID from existing cases
         latest_case = (
             self.db.query(TestCase)
-            .filter(TestCase.code.like(f"{prefix}-%"))
-            .order_by(TestCase.code.desc())
+            .order_by(TestCase.id.desc())
             .first()
         )
 
         if latest_case:
-            try:
-                last_seq = int(latest_case.code.split("-")[-1])
-                new_seq = last_seq + 1
-            except (ValueError, IndexError):
-                new_seq = 1
+            next_id = latest_case.id + 1
         else:
-            new_seq = 1
+            next_id = 1
 
-        return f"{prefix}-{new_seq:03d}"
+        return f"{next_id:07d}"
 
     def create_case(
         self, case_data: TestCaseCreate, created_by: Optional[str] = None
@@ -249,9 +241,13 @@ class TestCaseService:
             platform=case_data.platform,
             priority=case_data.priority,
             status=case_data.status,
+            is_core=case_data.is_core,
+            owner=case_data.owner,
+            developer=case_data.developer,
+            page_url=case_data.page_url,
             preconditions=case_data.preconditions,
             steps=case_data.steps,
-            expected_result=case_data.expected_result,
+            remark=case_data.remark,
             tags=case_data.tags,
             created_by=created_by,
             created_at=now,
