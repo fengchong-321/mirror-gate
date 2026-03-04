@@ -6,6 +6,7 @@ This module provides the actual mock response generation logic that:
 - Returns configured mock responses
 """
 
+import fnmatch
 import json
 import time
 import random
@@ -155,7 +156,7 @@ class MockInterceptor:
                         value = None
                         break
                 actual_value = str(value) if value is not None else None
-            except:
+            except (json.JSONDecodeError, KeyError, TypeError):
                 pass
 
         if actual_value is None:
@@ -187,7 +188,6 @@ class MockInterceptor:
 
     def _match_path(self, pattern: str, path: str) -> bool:
         """Match path against pattern with wildcard support."""
-        import fnmatch
         return fnmatch.fnmatch(path, pattern)
 
     def _build_response(self, response: MockResponse) -> Dict[str, Any]:
@@ -213,7 +213,7 @@ class MockInterceptor:
             try:
                 ab_config = json.loads(response.ab_test_config)
                 result["body"] = self._apply_ab_test(ab_config)
-            except:
+            except (json.JSONDecodeError, TypeError):
                 result["body"] = response.response_json or "{}"
         else:
             result["body"] = response.response_json or "{}"
