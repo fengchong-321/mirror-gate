@@ -68,16 +68,20 @@ class TestCaseGroupListResponse(BaseModel):
 # ============ TestCase Schemas ============
 
 class TestCaseBase(BaseModel):
-    """Base schema for TestCase."""
-    title: str = Field(..., min_length=1, max_length=200, description="Test case title")
-    case_type: CaseType = Field(CaseType.FUNCTIONAL, description="Test case type")
-    platform: Platform = Field(Platform.WEB, description="Target platform")
-    priority: Priority = Field(Priority.MEDIUM, description="Priority level")
-    status: CaseStatus = Field(CaseStatus.DRAFT, description="Test case status")
-    preconditions: Optional[str] = Field(None, description="Preconditions for the test")
-    steps: Optional[str] = Field(None, description="Test steps (JSON array)")
-    expected_result: Optional[str] = Field(None, description="Expected result")
-    tags: Optional[str] = Field(None, description="Tags (JSON array)")
+    """Base schema for TestCase - 定义见设计文档 4.1"""
+    title: str = Field(..., min_length=1, max_length=200, description="用例标题")
+    case_type: Optional[CaseType] = Field(None, description="用例类型")
+    platform: Optional[Platform] = Field(None, description="所属平台")
+    priority: Optional[Priority] = Field(None, description="重要程度")
+    is_core: Optional[bool] = Field(False, description="核心用例")
+    owner: Optional[str] = Field(None, max_length=50, description="维护人")
+    developer: Optional[str] = Field(None, max_length=50, description="开发负责人")
+    page_url: Optional[str] = Field(None, max_length=500, description="页面地址")
+    preconditions: Optional[str] = Field(None, description="前置条件（富文本）")
+    steps: Optional[Any] = Field(None, description="测试步骤（表格）")
+    remark: Optional[str] = Field(None, description="备注（富文本）")
+    tags: Optional[Any] = Field(None, description="标签数组")
+    status: Optional[CaseStatus] = Field(CaseStatus.DRAFT, description="用例状态")
 
 
 class TestCaseCreate(TestCaseBase):
@@ -93,17 +97,35 @@ class TestCaseUpdate(BaseModel):
     platform: Optional[Platform] = None
     priority: Optional[Priority] = None
     status: Optional[CaseStatus] = None
+    is_core: Optional[bool] = None
+    owner: Optional[str] = Field(None, max_length=50)
+    developer: Optional[str] = Field(None, max_length=50)
+    page_url: Optional[str] = Field(None, max_length=500)
     preconditions: Optional[str] = None
-    steps: Optional[str] = None
-    expected_result: Optional[str] = None
-    tags: Optional[str] = None
+    steps: Optional[Any] = None
+    remark: Optional[str] = None
+    tags: Optional[Any] = None
 
 
-class TestCaseResponse(TestCaseBase):
+class TestCaseResponse(BaseModel):
     """Response schema for TestCase."""
     id: int
     group_id: int
     code: str
+    order: int = 0
+    title: str
+    case_type: Optional[CaseType] = None
+    platform: Optional[Platform] = None
+    priority: Optional[Priority] = None
+    is_core: bool = False
+    owner: Optional[str] = None
+    developer: Optional[str] = None
+    page_url: Optional[str] = None
+    preconditions: Optional[str] = None
+    steps: Optional[Any] = None
+    remark: Optional[str] = None
+    tags: Optional[Any] = None
+    status: CaseStatus = CaseStatus.DRAFT
     created_by: Optional[str] = None
     created_at: datetime
     updated_by: Optional[str] = None

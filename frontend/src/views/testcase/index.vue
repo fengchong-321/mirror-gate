@@ -75,8 +75,21 @@
         <el-card class="case-list-card">
           <template #header>
             <div class="card-header">
-              <span>{{ selectedGroup?.label || '用例列表' }}</span>
+              <span>{{ selectedGroup?.label || '用例列表' }}{{ selectedGroupId ? ` (共 ${totalCases} 条)` : '' }}</span>
               <div class="toolbar">
+                <el-input
+                  v-model="searchKeyword"
+                  placeholder="搜索用例名称或步骤"
+                  clearable
+                  style="width: 200px"
+                  :disabled="!selectedGroupId"
+                  @keyup.enter="handleSearch"
+                  @clear="handleSearch"
+                >
+                  <template #prefix>
+                    <el-icon><Search /></el-icon>
+                  </template>
+                </el-input>
                 <el-button
                   type="primary"
                   :disabled="!selectedGroupId"
@@ -122,11 +135,6 @@
 
           <!-- Case Table -->
           <template v-if="selectedGroupId">
-            <!-- Case Stats -->
-            <div class="case-stats">
-              <span>共 {{ totalCases }} 条用例</span>
-            </div>
-
             <el-table
               ref="tableRef"
               :data="caseList"
@@ -294,6 +302,7 @@ const treeProps = {
 // Case list state
 const tableRef = ref()
 const selectedGroupId = ref<number | null>(null)
+const searchKeyword = ref('')
 const selectedGroup = ref<TreeNode | null>(null)
 const caseList = ref<TestCase[]>([])
 const caseLoading = ref(false)
@@ -369,7 +378,8 @@ const loadCases = async () => {
   caseLoading.value = true
   try {
     const skip = (currentPage.value - 1) * pageSize.value
-    const response = await testcaseApi.getCases(selectedGroupId.value, skip, pageSize.value)
+    const keyword = searchKeyword.value.trim() || undefined
+    const response = await testcaseApi.getCases(selectedGroupId.value, skip, pageSize.value, keyword)
     caseList.value = response.data.items
     totalCases.value = response.data.total
   } catch (error) {
@@ -377,6 +387,12 @@ const loadCases = async () => {
   } finally {
     caseLoading.value = false
   }
+}
+
+// Handle search
+const handleSearch = () => {
+  currentPage.value = 1
+  loadCases()
 }
 
 // Tree node click handler

@@ -1,27 +1,25 @@
-# service_mock
+# MirrorGate
 
-Service Mock - A mock service for development and testing.
+全功能测试平台 - Mock 服务 + 测试用例管理 + 自动化执行
 
-## Description
+## 名称含义
 
-This project provides mock services to facilitate development and testing workflows.
+- **Mirror（镜）**: Mock 服务如镜中倒影，模拟真实接口
+- **Gate（门）**: 测试如门禁把关，验证系统质量
 
-## Getting Started
+## 功能规划
 
-### Prerequisites
+- API Mock 服务
+- 测试用例管理
+- 自动化测试执行
+- 请求日志追踪
 
-- Git
-
-### Installation
+## 快速开始
 
 ```bash
 git clone https://github.com/fengchong-321/service_mock.git
 cd service_mock
 ```
-
-## Usage
-
-To be added.
 
 ## License
 

@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     MYSQL_HOST: str = "localhost"
     MYSQL_PORT: int = 3306
     MYSQL_USER: str = "root"
-    MYSQL_PASSWORD: str = "dev_password"  # Change in production
+    MYSQL_PASSWORD: str = ""  # Empty password for local development
     MYSQL_DATABASE: str = "mirror_gate"
 
     # Redis
