@@ -58,6 +58,32 @@ export interface MockPreviewResponse {
   error: string | null
 }
 
+// Compare Record Types
+export interface MockCompareRecord {
+  id: number
+  suite_id: number
+  path: string
+  method: string
+  mock_response: string | null
+  real_response: string | null
+  differences: any[]
+  is_match: boolean
+  created_at: string
+}
+
+export interface MockCompareRecordListResponse {
+  total: number
+  items: MockCompareRecord[]
+}
+
+export interface CompareRequest {
+  mock_response: string
+  real_api_url: string
+  real_api_method?: string
+  real_api_headers?: Record<string, string>
+  real_api_body?: string
+}
+
 export const mockApi = {
   getSuites: (skip = 0, limit = 100) =>
     api.get<MockSuiteListResponse>('/mock/suites', { params: { skip, limit } }),
@@ -73,6 +99,21 @@ export const mockApi = {
     api.post<MockSuite>(`/mock/suites/${id}/copy`, null, { params: { new_name: newName } }),
   previewResponse: (data: MockPreviewRequest) =>
     api.post<MockPreviewResponse>('/mock/preview', data),
+
+  // Compare records
+  getCompareRecords: (params: { suite_id?: number; is_match?: boolean; skip?: number; limit?: number }) =>
+    api.get<MockCompareRecordListResponse>('/mock/compare/records', { params }),
+
+  getCompareRecord: (id: number) =>
+    api.get<MockCompareRecord>(`/mock/compare/records/${id}`),
+
+  manualCompare: (data: CompareRequest, suiteId?: number) =>
+    api.post<MockCompareRecord>('/mock/compare/manual', data, {
+      params: suiteId ? { suite_id: suiteId } : {}
+    }),
+
+  deleteCompareRecord: (id: number) =>
+    api.delete(`/mock/compare/records/${id}`),
 }
 
 export default mockApi
