@@ -8,7 +8,7 @@
           @click="editor?.chain().focus().toggleBold().run()"
           title="加粗"
         >
-          <el-icon><Bold /></el-icon>
+          <strong>B</strong>
         </el-button>
         <el-button
           size="small"
@@ -16,7 +16,7 @@
           @click="editor?.chain().focus().toggleItalic().run()"
           title="斜体"
         >
-          <el-icon><Italic /></el-icon>
+          <em>I</em>
         </el-button>
         <el-button
           size="small"
@@ -24,7 +24,7 @@
           @click="editor?.chain().focus().toggleUnderline().run()"
           title="下划线"
         >
-          <el-icon><UnderlineIcon /></el-icon>
+          <u>U</u>
         </el-button>
         <el-button
           size="small"
@@ -32,7 +32,7 @@
           @click="editor?.chain().focus().toggleStrike().run()"
           title="删除线"
         >
-          <el-icon><Strikethrough /></el-icon>
+          <s>S</s>
         </el-button>
       </el-button-group>
 
@@ -74,7 +74,7 @@
           @click="editor?.chain().focus().toggleOrderedList().run()"
           title="有序列表"
         >
-          <el-icon><List /></el-icon>
+          OL
         </el-button>
         <el-button
           size="small"
@@ -82,7 +82,7 @@
           @click="editor?.chain().focus().toggleBulletList().run()"
           title="无序列表"
         >
-          <el-icon><Menu /></el-icon>
+          UL
         </el-button>
         <el-button
           size="small"
@@ -90,7 +90,7 @@
           @click="editor?.chain().focus().toggleCodeBlock().run()"
           title="代码块"
         >
-          <el-icon><Document /></el-icon>
+          Code
         </el-button>
       </el-button-group>
 
@@ -103,14 +103,14 @@
           @click="setLink"
           title="链接"
         >
-          <el-icon><LinkIcon /></el-icon>
+          Link
         </el-button>
         <el-button
           size="small"
           @click="setImage"
           title="图片"
         >
-          <el-icon><Picture /></el-icon>
+          Img
         </el-button>
       </el-button-group>
     </div>
@@ -127,17 +127,6 @@ import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import Underline from '@tiptap/extension-underline'
-import {
-  Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  Strikethrough,
-  List,
-  Menu,
-  Document,
-  Link as LinkIcon,
-  Picture
-} from '@element-plus/icons-vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 
 const props = defineProps<{
@@ -289,6 +278,8 @@ const setImage = async () => {
 
 .toolbar :deep(.el-button) {
   padding: 5px 8px;
+  font-size: 12px;
+  min-width: 28px;
 }
 
 .toolbar :deep(.el-divider--vertical) {

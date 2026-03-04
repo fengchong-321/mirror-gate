@@ -245,27 +245,28 @@ def create_case(
     "/cases",
     response_model=TestCaseListResponse,
     summary="List test cases",
-    description="Retrieve a paginated list of test cases for a specific group.",
+    description="Retrieve a paginated list of test cases for a specific group with optional keyword search.",
 )
 def list_cases(
     group_id: int = Query(..., description="Group ID to filter cases"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
+    keyword: Optional[str] = Query(None, description="Search keyword for title and steps"),
     service: TestCaseService = Depends(get_testcase_service),
 ):
-    """List test cases with pagination.
+    """List test cases with pagination and optional keyword search.
 
     Args:
         group_id: Group ID to filter cases.
         skip: Number of records to skip.
         limit: Maximum number of records to return.
+        keyword: Optional search keyword to filter by title and steps content.
         service: TestCaseService instance.
 
     Returns:
         Paginated list of test cases.
     """
-    cases = service.get_cases_by_group(group_id, skip=skip, limit=limit)
-    total = service.count_cases_by_group(group_id)
+    cases, total = service.search_cases(group_id, keyword, skip=skip, limit=limit)
     return TestCaseListResponse(
         total=total,
         items=[TestCaseResponse.model_validate(c) for c in cases],

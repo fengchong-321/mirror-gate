@@ -329,6 +329,51 @@ class TestCaseService:
             .count()
         )
 
+    def search_cases(
+        self,
+        group_id: int,
+        keyword: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> tuple:
+        """Search test cases in a group by keyword.
+
+        Searches in title and steps content (JSON field).
+
+        Args:
+            group_id: The ID of the group.
+            keyword: Search keyword to filter by title and steps.
+            skip: Number of records to skip.
+            limit: Maximum number of records to return.
+
+        Returns:
+            Tuple of (list of TestCase instances, total count).
+        """
+        from sqlalchemy import or_
+        from sqlalchemy.types import Text
+
+        query = self.db.query(TestCase).filter(TestCase.group_id == group_id)
+
+        if keyword:
+            search_pattern = f"%{keyword}%"
+            # Search in title or in steps JSON content
+            query = query.filter(
+                or_(
+                    TestCase.title.ilike(search_pattern),
+                    func.cast(TestCase.steps, Text).ilike(search_pattern),
+                )
+            )
+
+        total = query.count()
+        cases = (
+            query.order_by(TestCase.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+        return cases, total
+
     def update_case(
         self,
         case_id: int,

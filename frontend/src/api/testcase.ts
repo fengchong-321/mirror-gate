@@ -6,6 +6,46 @@ const api = axios.create({
 })
 
 // =====================
+// Enum Constants (设计文档 4.2 & 5.2)
+// =====================
+
+// 用例类型 - 严格按照设计文档 4.2
+export const CASE_TYPES = [
+  { value: '功能测试', label: '功能测试' },
+  { value: '性能测试', label: '性能测试' },
+  { value: '安全测试', label: '安全测试' },
+  { value: '兼容性测试', label: '兼容性测试' },
+  { value: '用户体验测试', label: '用户体验测试' },
+  { value: '其他', label: '其他' },
+] as const
+
+// 所属平台 - 严格按照设计文档 4.2
+export const PLATFORMS = [
+  { value: 'RN', label: 'RN (Android+H5)' },
+  { value: '服务端', label: '服务端' },
+  { value: '小程序', label: '小程序' },
+  { value: 'Web', label: 'Web' },
+  { value: 'H5', label: 'H5' },
+] as const
+
+// 重要程度 - 严格按照设计文档 4.2
+export const PRIORITIES = [
+  { value: 'P0', label: 'P0 (最高)' },
+  { value: 'P1', label: 'P1' },
+  { value: 'P2', label: 'P2' },
+  { value: 'P3', label: 'P3' },
+  { value: 'P4', label: 'P4 (最低)' },
+] as const
+
+// 用例状态 - 严格按照设计文档 5.2
+export const CASE_STATUSES = [
+  { value: '草稿', label: '草稿' },
+  { value: '评审中', label: '评审中' },
+  { value: '通过', label: '通过' },
+  { value: '废弃', label: '废弃' },
+] as const
+
+// =====================
 // Type Definitions
 // =====================
 
@@ -44,19 +84,23 @@ export interface TestCase {
   id: number
   group_id: number
   code: string
-  title: string
   order: number
+  title: string
   case_type?: string
   platform?: string
   priority?: string
-  status: string
+  is_core: boolean
+  owner?: string
+  developer?: string
+  page_url?: string
   preconditions?: string
   steps?: TestStep[]
-  expected_result?: string
+  remark?: string
   tags?: string[]
-  created_by: string
+  status: string
+  created_by?: string
   created_at: string
-  updated_by: string
+  updated_by?: string
   updated_at: string
 }
 
@@ -129,9 +173,9 @@ export const testcaseApi = {
     api.delete(`/testcase/groups/${id}`),
 
   // Case operations
-  getCases: (groupId: number, skip = 0, limit = 100) =>
+  getCases: (groupId: number, skip = 0, limit = 100, keyword?: string) =>
     api.get<TestCaseListResponse>('/testcase/cases', {
-      params: { group_id: groupId, skip, limit }
+      params: { group_id: groupId, skip, limit, keyword }
     }),
 
   getCase: (id: number) =>
