@@ -42,44 +42,64 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="用例类型" prop="case_type">
-              <el-select v-model="formData.case_type" placeholder="请选择用例类型" style="width: 100%">
-                <el-option label="功能测试" value="functional" />
-                <el-option label="API测试" value="api" />
-                <el-option label="UI测试" value="ui" />
-                <el-option label="性能测试" value="performance" />
-                <el-option label="安全测试" value="security" />
+              <el-select v-model="formData.case_type" placeholder="请选择用例类型" clearable style="width: 100%">
+                <el-option
+                  v-for="item in CASE_TYPES"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="所属平台" prop="platform">
-              <el-select v-model="formData.platform" placeholder="请选择所属平台" style="width: 100%">
-                <el-option label="Web" value="web" />
-                <el-option label="iOS" value="ios" />
-                <el-option label="Android" value="android" />
-                <el-option label="小程序" value="mini_program" />
+              <el-select v-model="formData.platform" placeholder="请选择所属平台" clearable style="width: 100%">
+                <el-option
+                  v-for="item in PLATFORMS"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
-          <el-col :span="8">
-            <el-form-item label="优先级" prop="priority">
-              <el-select v-model="formData.priority" placeholder="请选择优先级" style="width: 100%">
-                <el-option label="低" value="low" />
-                <el-option label="中" value="medium" />
-                <el-option label="高" value="high" />
-                <el-option label="严重" value="critical" />
+          <el-col :span="12">
+            <el-form-item label="重要程度" prop="priority">
+              <el-select v-model="formData.priority" placeholder="请选择重要程度" clearable style="width: 100%">
+                <el-option
+                  v-for="item in PRIORITIES"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
-            <el-form-item label="状态" prop="status">
-              <el-select v-model="formData.status" placeholder="请选择状态" style="width: 100%">
-                <el-option label="草稿" value="draft" />
-                <el-option label="激活" value="active" />
-                <el-option label="废弃" value="deprecated" />
-              </el-select>
+          <el-col :span="12">
+            <el-form-item label="核心用例" prop="is_core">
+              <el-switch v-model="formData.is_core" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="24">
+          <el-col :span="12">
+            <el-form-item label="维护人" prop="owner">
+              <el-input v-model="formData.owner" placeholder="请输入维护人" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="开发负责人" prop="developer">
+              <el-input v-model="formData.developer" placeholder="请输入开发负责人" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="24">
+          <el-col :span="24">
+            <el-form-item label="页面地址" prop="page_url">
+              <el-input v-model="formData.page_url" placeholder="请输入页面URL" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -165,10 +185,10 @@
           </div>
         </el-form-item>
 
-        <el-form-item label="预期结果">
+        <el-form-item label="备注">
           <RichTextEditor
-            v-model="formData.expected_result"
-            placeholder="请输入整体预期结果"
+            v-model="formData.remark"
+            placeholder="请输入备注信息"
           />
         </el-form-item>
       </el-card>
@@ -232,7 +252,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ArrowLeft, Plus } from '@element-plus/icons-vue'
-import { testcaseApi, type TestStep } from '@/api/testcase'
+import { testcaseApi, type TestStep, CASE_TYPES, PLATFORMS, PRIORITIES } from '@/api/testcase'
 import RichTextEditor from '@/components/RichTextEditor.vue'
 
 const route = useRoute()
@@ -262,23 +282,29 @@ interface FormData {
   case_type: string
   platform: string
   priority: string
-  status: string
+  is_core: boolean
+  owner: string
+  developer: string
+  page_url: string
   preconditions: string
   steps: TestStep[]
-  expected_result: string
+  remark: string
   tags: string[]
 }
 
 const formData = reactive<FormData>({
   code: '',
   title: '',
-  case_type: 'functional',
-  platform: 'web',
-  priority: 'medium',
-  status: 'draft',
+  case_type: '',
+  platform: '',
+  priority: '',
+  is_core: false,
+  owner: '',
+  developer: '',
+  page_url: '',
   preconditions: '',
   steps: [{ step: '', expected: '' }],
-  expected_result: '',
+  remark: '',
   tags: []
 })
 
@@ -286,11 +312,7 @@ const formRules: FormRules = {
   title: [
     { required: true, message: '请输入用例标题', trigger: 'blur' },
     { max: 200, message: '标题最大200个字符', trigger: 'blur' }
-  ],
-  case_type: [{ required: true, message: '请选择用例类型', trigger: 'change' }],
-  platform: [{ required: true, message: '请选择所属平台', trigger: 'change' }],
-  priority: [{ required: true, message: '请选择优先级', trigger: 'change' }],
-  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
+  ]
 }
 
 // Tags
@@ -350,15 +372,18 @@ const loadCaseData = async () => {
 
     formData.code = caseData.code || ''
     formData.title = caseData.title || ''
-    formData.case_type = caseData.case_type || 'functional'
-    formData.platform = caseData.platform || 'web'
-    formData.priority = caseData.priority || 'medium'
-    formData.status = caseData.status || 'draft'
+    formData.case_type = caseData.case_type || ''
+    formData.platform = caseData.platform || ''
+    formData.priority = caseData.priority || ''
+    formData.is_core = caseData.is_core || false
+    formData.owner = caseData.owner || ''
+    formData.developer = caseData.developer || ''
+    formData.page_url = caseData.page_url || ''
     formData.preconditions = caseData.preconditions || ''
     formData.steps = caseData.steps && caseData.steps.length > 0
       ? caseData.steps
       : [{ step: '', expected: '' }]
-    formData.expected_result = caseData.expected_result || ''
+    formData.remark = caseData.remark || ''
     formData.tags = caseData.tags || []
   } catch (error) {
     ElMessage.error('加载用例数据失败')
@@ -378,13 +403,16 @@ const saveCase = async () => {
 
   const caseData: Record<string, unknown> = {
     title: formData.title,
-    case_type: formData.case_type,
-    platform: formData.platform,
-    priority: formData.priority,
-    status: formData.status,
+    case_type: formData.case_type || undefined,
+    platform: formData.platform || undefined,
+    priority: formData.priority || undefined,
+    is_core: formData.is_core,
+    owner: formData.owner || undefined,
+    developer: formData.developer || undefined,
+    page_url: formData.page_url || undefined,
     preconditions: formData.preconditions || undefined,
     steps: filteredSteps.length > 0 ? filteredSteps : undefined,
-    expected_result: formData.expected_result || undefined,
+    remark: formData.remark || undefined,
     tags: formData.tags.length > 0 ? formData.tags : undefined
   }
 
