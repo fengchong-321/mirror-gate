@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import get_settings
-from app.api.v1 import mock, api_test, ui_test, auth, scheduler, dashboard, testcase
+from app.api.v1 import mock, api_test, ui_test, auth, scheduler, dashboard, testcase, mock_compare
 from app.services.mock_interceptor import MockInterceptor
 from app.database import SessionLocal
 import asyncio
@@ -93,6 +93,7 @@ app.include_router(ui_test.router, prefix="/api/v1")
 app.include_router(scheduler.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(testcase.router, prefix="/api/v1")
+app.include_router(mock_compare.router, prefix="/api/v1")
 
 
 @app.get("/health")

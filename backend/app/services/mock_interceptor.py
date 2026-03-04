@@ -23,6 +23,7 @@ from app.models.mock import (
     MatchType,
     WhitelistType,
 )
+from app.models.mock_compare import MockCompareRecord
 
 
 class MockInterceptor:
@@ -258,6 +259,42 @@ class MockInterceptor:
         """Simulate timeout by sleeping."""
         if delay_ms > 0:
             time.sleep(delay_ms / 1000.0)
+
+    def save_compare_record(
+        self,
+        suite_id: int,
+        path: str,
+        method: str,
+        mock_response: str,
+        real_response: str,
+    ) -> MockCompareRecord:
+        """Save a comparison record to the database.
+
+        Args:
+            suite_id: ID of the mock suite.
+            path: API path that was compared.
+            method: HTTP method.
+            mock_response: Mock response JSON string.
+            real_response: Real API response JSON string.
+
+        Returns:
+            The created MockCompareRecord instance.
+        """
+        result = MockCompareTool.compare_responses(mock_response, real_response)
+
+        record = MockCompareRecord(
+            suite_id=suite_id,
+            path=path,
+            method=method,
+            mock_response=mock_response,
+            real_response=real_response,
+            differences=result["differences"],
+            is_match=result["match"],
+        )
+        self.db.add(record)
+        self.db.commit()
+        self.db.refresh(record)
+        return record
 
 
 class MockCompareTool:
