@@ -3,6 +3,7 @@
 This module defines the REST API endpoints for mock suite management.
 """
 
+import json
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -246,8 +247,6 @@ def preview_response(request: MockPreviewRequest):
     Returns:
         Validation result with formatted JSON or error message.
     """
-    import json
-
     if not request.response_json or not request.response_json.strip():
         return MockPreviewResponse(valid=True, formatted="{}")
 
