@@ -18,9 +18,9 @@
             <el-icon><House /></el-icon>
             <span>仪表盘</span>
           </el-menu-item>
-          <el-menu-item index="/mock">
-            <el-icon><Document /></el-icon>
-            <span>Mock管理</span>
+          <el-menu-item index="/testcase">
+            <el-icon><Tickets /></el-icon>
+            <span>用例管理</span>
           </el-menu-item>
           <el-menu-item index="/api-test">
             <el-icon><Connection /></el-icon>
@@ -30,9 +30,9 @@
             <el-icon><Monitor /></el-icon>
             <span>UI测试</span>
           </el-menu-item>
-          <el-menu-item index="/testcase">
-            <el-icon><Tickets /></el-icon>
-            <span>用例管理</span>
+          <el-menu-item index="/mock">
+            <el-icon><Document /></el-icon>
+            <span>Mock管理</span>
           </el-menu-item>
         </el-menu>
       </el-aside>
