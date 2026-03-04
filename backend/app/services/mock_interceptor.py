@@ -240,6 +240,20 @@ class MockInterceptor:
 
         return variants[-1].get("response", "{}")
 
+    async def get_mock_response_async(
+        self,
+        method: str,
+        path: str,
+        headers: Dict[str, str],
+        body: Optional[str],
+        query_params: Dict[str, str],
+        client_info: Dict[str, str],
+    ) -> Optional[Dict[str, Any]]:
+        """Async version of get_mock_response."""
+        return self.get_mock_response(
+            method, path, headers, body, query_params, client_info
+        )
+
     def simulate_timeout(self, delay_ms: int):
         """Simulate timeout by sleeping."""
         if delay_ms > 0:
