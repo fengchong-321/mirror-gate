@@ -6,6 +6,7 @@ This module defines the REST API endpoints for mock suite management.
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -16,6 +17,18 @@ from app.schemas.mock import (
     MockSuiteResponse,
     MockSuiteListResponse,
 )
+
+
+class MockPreviewRequest(BaseModel):
+    """Preview request for mock response JSON."""
+    response_json: Optional[str] = None
+
+
+class MockPreviewResponse(BaseModel):
+    """Preview response with validation result."""
+    valid: bool
+    formatted: Optional[str] = None
+    error: Optional[str] = None
 
 
 router = APIRouter(prefix="/mock", tags=["mock"])
@@ -216,3 +229,34 @@ def copy_suite(
         if "not found" in str(e):
             raise HTTPException(status_code=404, detail=str(e))
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post(
+    "/preview",
+    response_model=MockPreviewResponse,
+    summary="Preview mock response",
+    description="Validate and format mock response JSON.",
+)
+def preview_response(request: MockPreviewRequest):
+    """Validate and format JSON for preview.
+
+    Args:
+        request: Preview request containing response_json.
+
+    Returns:
+        Validation result with formatted JSON or error message.
+    """
+    import json
+
+    if not request.response_json or not request.response_json.strip():
+        return MockPreviewResponse(valid=True, formatted="{}")
+
+    try:
+        parsed = json.loads(request.response_json)
+        formatted = json.dumps(parsed, indent=2, ensure_ascii=False)
+        return MockPreviewResponse(valid=True, formatted=formatted)
+    except json.JSONDecodeError as e:
+        return MockPreviewResponse(
+            valid=False,
+            error=f"JSON 解析错误: 行 {e.lineno}, 列 {e.colno} - {e.msg}"
+        )
