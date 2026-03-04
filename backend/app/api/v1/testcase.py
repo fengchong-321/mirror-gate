@@ -11,7 +11,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Body
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -42,6 +42,26 @@ from app.schemas.testcase import (
 
 
 router = APIRouter(prefix="/testcase", tags=["用例管理"])
+
+
+def parse_case_id(case_id: str) -> int:
+    """Parse case_id from string to integer.
+
+    Supports 7-digit string IDs (e.g., "0000001") by converting to integer.
+
+    Args:
+        case_id: String representation of the case ID.
+
+    Returns:
+        Integer case ID.
+
+    Raises:
+        HTTPException: 400 if case_id is not a valid integer format.
+    """
+    try:
+        return int(case_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid case ID format")
 
 
 def get_testcase_service(db: Session = Depends(get_db)) -> TestCaseService:
@@ -259,22 +279,23 @@ def list_cases(
     description="Retrieve a specific test case by ID with full details including attachments, comments, and history.",
 )
 def get_case(
-    case_id: int,
+    case_id: str,
     service: TestCaseService = Depends(get_testcase_service),
 ):
     """Get a specific test case by ID with full details.
 
     Args:
-        case_id: ID of the case to retrieve.
+        case_id: ID of the case to retrieve (supports 7-digit format like "0000001").
         service: TestCaseService instance.
 
     Returns:
         The requested test case with full details.
 
     Raises:
-        HTTPException: 404 if case not found.
+        HTTPException: 400 if case_id format is invalid, 404 if case not found.
     """
-    case = service.get_case_detail(case_id)
+    numeric_id = parse_case_id(case_id)
+    case = service.get_case_detail(numeric_id)
     if not case:
         raise HTTPException(status_code=404, detail=f"Case with id {case_id} not found")
     return case
@@ -287,7 +308,7 @@ def get_case(
     description="Update an existing test case.",
 )
 def update_case(
-    case_id: int,
+    case_id: str,
     case_data: TestCaseUpdate,
     service: TestCaseService = Depends(get_testcase_service),
     updated_by: Optional[str] = Query(None, description="Username of the updater"),
@@ -295,7 +316,7 @@ def update_case(
     """Update an existing test case.
 
     Args:
-        case_id: ID of the case to update.
+        case_id: ID of the case to update (supports 7-digit format like "0000001").
         case_data: Case update data.
         service: TestCaseService instance.
         updated_by: Username of the updater.
@@ -304,9 +325,10 @@ def update_case(
         The updated test case.
 
     Raises:
-        HTTPException: 404 if case not found.
+        HTTPException: 400 if case_id format is invalid, 404 if case not found.
     """
-    case = service.update_case(case_id, case_data, updated_by=updated_by)
+    numeric_id = parse_case_id(case_id)
+    case = service.update_case(numeric_id, case_data, updated_by=updated_by)
     return TestCaseResponse.model_validate(case)
 
 
@@ -317,22 +339,23 @@ def update_case(
     description="Delete a test case by ID.",
 )
 def delete_case(
-    case_id: int,
+    case_id: str,
     service: TestCaseService = Depends(get_testcase_service),
 ):
     """Delete a test case by ID.
 
     Args:
-        case_id: ID of the case to delete.
+        case_id: ID of the case to delete (supports 7-digit format like "0000001").
         service: TestCaseService instance.
 
     Returns:
         None on successful deletion.
 
     Raises:
-        HTTPException: 404 if case not found.
+        HTTPException: 400 if case_id format is invalid, 404 if case not found.
     """
-    success = service.delete_case(case_id)
+    numeric_id = parse_case_id(case_id)
+    success = service.delete_case(numeric_id)
     if not success:
         raise HTTPException(status_code=404, detail=f"Case with id {case_id} not found")
     return None
@@ -346,14 +369,14 @@ def delete_case(
     description="Create a copy of an existing test case.",
 )
 def copy_case(
-    case_id: int,
+    case_id: str,
     service: TestCaseService = Depends(get_testcase_service),
     created_by: Optional[str] = Query(None, description="Username of the creator"),
 ):
     """Create a copy of an existing test case.
 
     Args:
-        case_id: ID of the case to copy.
+        case_id: ID of the case to copy (supports 7-digit format like "0000001").
         service: TestCaseService instance.
         created_by: Username of the creator.
 
@@ -361,9 +384,10 @@ def copy_case(
         The newly created test case copy.
 
     Raises:
-        HTTPException: 404 if source case not found.
+        HTTPException: 400 if case_id format is invalid, 404 if source case not found.
     """
-    case = service.copy_case(case_id, created_by=created_by)
+    numeric_id = parse_case_id(case_id)
+    case = service.copy_case(numeric_id, created_by=created_by)
     return TestCaseResponse.model_validate(case)
 
 
@@ -374,7 +398,7 @@ def copy_case(
     description="Move a test case to another group.",
 )
 def move_case(
-    case_id: int,
+    case_id: str,
     target_group_id: int = Query(..., description="Target group ID"),
     service: TestCaseService = Depends(get_testcase_service),
     updated_by: Optional[str] = Query(None, description="Username of the updater"),
@@ -382,7 +406,7 @@ def move_case(
     """Move a test case to another group.
 
     Args:
-        case_id: ID of the case to move.
+        case_id: ID of the case to move (supports 7-digit format like "0000001").
         target_group_id: Target group ID.
         service: TestCaseService instance.
         updated_by: Username of the updater.
@@ -391,9 +415,10 @@ def move_case(
         The updated test case.
 
     Raises:
-        HTTPException: 404 if case or target group not found.
+        HTTPException: 400 if case_id format is invalid, 404 if case or target group not found.
     """
-    case = service.move_case(case_id, target_group_id, updated_by=updated_by)
+    numeric_id = parse_case_id(case_id)
+    case = service.move_case(numeric_id, target_group_id, updated_by=updated_by)
     return TestCaseResponse.model_validate(case)
 
 
@@ -404,7 +429,7 @@ def move_case(
 )
 def reorder_cases(
     group_id: int = Query(..., description="Group ID"),
-    case_orders: List[dict] = Query(..., description="List of case orders with id and order"),
+    case_orders: List[dict] = Body(..., description="List of case orders with id and order"),
     service: TestCaseService = Depends(get_testcase_service),
 ):
     """Batch reorder test cases within a group.
@@ -430,27 +455,28 @@ def reorder_cases(
     description="Retrieve all comments for a specific test case.",
 )
 def get_case_comments(
-    case_id: int,
+    case_id: str,
     service: TestCaseService = Depends(get_testcase_service),
 ):
     """Get all comments for a test case.
 
     Args:
-        case_id: ID of the case.
+        case_id: ID of the case (supports 7-digit format like "0000001").
         service: TestCaseService instance.
 
     Returns:
         List of comments for the case.
 
     Raises:
-        HTTPException: 404 if case not found.
+        HTTPException: 400 if case_id format is invalid, 404 if case not found.
     """
-    case = service.get_case(case_id)
+    numeric_id = parse_case_id(case_id)
+    case = service.get_case(numeric_id)
     if not case:
         raise HTTPException(status_code=404, detail=f"Case with id {case_id} not found")
 
     # Get comments from the case detail
-    case_detail = service.get_case_detail(case_id)
+    case_detail = service.get_case_detail(numeric_id)
     return case_detail.comments if case_detail else []
 
 
@@ -462,7 +488,7 @@ def get_case_comments(
     description="Add a comment to a test case.",
 )
 def add_comment(
-    case_id: int,
+    case_id: str,
     comment_data: TestCaseCommentCreate,
     service: TestCaseService = Depends(get_testcase_service),
     created_by: Optional[str] = Query(None, description="Username of the commenter"),
@@ -470,7 +496,7 @@ def add_comment(
     """Add a comment to a test case.
 
     Args:
-        case_id: ID of the case.
+        case_id: ID of the case (supports 7-digit format like "0000001").
         comment_data: Comment creation data.
         service: TestCaseService instance.
         created_by: Username of the commenter.
@@ -479,9 +505,10 @@ def add_comment(
         The created comment.
 
     Raises:
-        HTTPException: 404 if case not found.
+        HTTPException: 400 if case_id format is invalid, 404 if case not found.
     """
-    comment = service.add_comment(case_id, comment_data, created_by=created_by)
+    numeric_id = parse_case_id(case_id)
+    comment = service.add_comment(numeric_id, comment_data, created_by=created_by)
     return TestCaseCommentResponse.model_validate(comment)
 
 
@@ -523,7 +550,7 @@ def delete_comment(
     description="Upload a file attachment to a test case.",
 )
 async def upload_attachment(
-    case_id: int,
+    case_id: str,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     uploaded_by: Optional[str] = Query(None, description="Username of the uploader"),
@@ -531,7 +558,7 @@ async def upload_attachment(
     """Upload an attachment to a test case.
 
     Args:
-        case_id: ID of the test case.
+        case_id: ID of the test case (supports 7-digit format like "0000001").
         file: The file to upload.
         db: Database session.
         uploaded_by: Username of the uploader.
@@ -540,12 +567,13 @@ async def upload_attachment(
         The created attachment record.
 
     Raises:
-        HTTPException: 404 if case not found, 400 if file validation fails.
+        HTTPException: 400 if case_id format is invalid or file validation fails, 404 if case not found.
     """
+    numeric_id = parse_case_id(case_id)
     settings = get_settings()
 
     # 1. Check if the test case exists
-    case = db.query(TestCase).filter(TestCase.id == case_id).first()
+    case = db.query(TestCase).filter(TestCase.id == numeric_id).first()
     if not case:
         raise HTTPException(status_code=404, detail=f"Case with id {case_id} not found")
 
@@ -567,7 +595,7 @@ async def upload_attachment(
 
     # 4. Generate unique filename and save path
     unique_filename = f"{uuid.uuid4()}{file_ext}"
-    upload_dir = Path(settings.UPLOAD_DIR) / "testcase" / str(case_id)
+    upload_dir = Path(settings.UPLOAD_DIR) / "testcase" / str(numeric_id)
     upload_dir.mkdir(parents=True, exist_ok=True)
     file_path = upload_dir / unique_filename
 
@@ -577,7 +605,7 @@ async def upload_attachment(
 
     # 6. Create database record
     attachment = TestCaseAttachment(
-        case_id=case_id,
+        case_id=numeric_id,
         filename=file.filename,
         file_path=str(file_path),
         file_size=len(content),
@@ -598,28 +626,29 @@ async def upload_attachment(
     description="Retrieve all attachments for a specific test case.",
 )
 def get_attachments(
-    case_id: int,
+    case_id: str,
     db: Session = Depends(get_db),
 ):
     """Get all attachments for a test case.
 
     Args:
-        case_id: ID of the test case.
+        case_id: ID of the test case (supports 7-digit format like "0000001").
         db: Database session.
 
     Returns:
         List of attachments for the case.
 
     Raises:
-        HTTPException: 404 if case not found.
+        HTTPException: 400 if case_id format is invalid, 404 if case not found.
     """
+    numeric_id = parse_case_id(case_id)
     # Check if the test case exists
-    case = db.query(TestCase).filter(TestCase.id == case_id).first()
+    case = db.query(TestCase).filter(TestCase.id == numeric_id).first()
     if not case:
         raise HTTPException(status_code=404, detail=f"Case with id {case_id} not found")
 
     attachments = db.query(TestCaseAttachment).filter(
-        TestCaseAttachment.case_id == case_id
+        TestCaseAttachment.case_id == numeric_id
     ).all()
     return [TestCaseAttachmentResponse.model_validate(a) for a in attachments]
 
