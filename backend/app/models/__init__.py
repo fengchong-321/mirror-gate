@@ -13,6 +13,10 @@ from app.models.mock import (
     WhitelistType,
 )
 
+from app.models.mock_compare import (
+    MockCompareRecord,
+)
+
 from app.models.api_test import (
     ApiTestSuite,
     ApiTestCase,
@@ -65,6 +69,8 @@ __all__ = [
     "MatchType",
     "RuleOperator",
     "WhitelistType",
+    # Mock Compare models
+    "MockCompareRecord",
     # API Test models
     "ApiTestSuite",
     "ApiTestCase",
