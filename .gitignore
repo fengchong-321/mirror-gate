@@ -1,0 +1,20 @@
+# Cache and temporary files
+debug/
+file-history/
+paste-cache/
+shell-snapshots/
+stats-cache.json
+history.jsonl
+
+# Session and task data
+sessions/
+tasks/
+teams/
+todos/
+projects/
+
+# Plugins cache (can be re-downloaded)
+plugins/cache/
+
+# Sensitive files - DO NOT COMMIT
+.mcp.json

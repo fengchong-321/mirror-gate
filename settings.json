@@ -1,0 +1,190 @@
+{
+  "enabledPlugins": {
+    "feature-dev@claude-plugins-official": true,
+    "glm-plan-usage@zai-coding-plugins": true,
+    "ralph-loop@claude-plugins-official": true,
+    "superpowers@superpowers-marketplace": true
+  },
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "684b7ea292904a4bb77c2a355b27a3ac.ELhCGISSJDmM0cBI",
+    "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-5",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5",
+    "ANTHROPIC_MODEL": "glm-5",
+    "API_TIMEOUT_MS": "3000000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "description": "Log PR URL and provide review command after PR creation",
+        "hooks": [
+          {
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(/gh pr create/.test(cmd)){const out=i.tool_output?.output||'';const m=out.match(/https:\\/\\/github.com\\/[^/]+\\/[^/]+\\/pull\\/\\d+/);if(m){console.error('[Hook] PR created: '+m[0]);const repo=m[0].replace(/https:\\/\\/github.com\\/([^/]+\\/[^/]+)\\/pull\\/\\d+/,'$1');const pr=m[0].replace(/.+\\/pull\\/(\\d+)/,'$1');console.error('[Hook] To review: gh pr review '+pr+' --repo '+repo)}}}catch{}console.log(d)})\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "description": "Example: async hook for build analysis",
+        "hooks": [
+          {
+            "async": true,
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(/(npm run build|pnpm build|yarn build)/.test(cmd)){console.error('[Hook] Build completed - async analysis running in background')}}catch{}console.log(d)})\"",
+            "timeout": 30,
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "description": "Auto-format JS/TS files after edits",
+        "hooks": [
+          {
+            "command": "node \"/Users/chongfeng/.claude/hooks/scripts/post-edit-format.js\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit"
+      },
+      {
+        "description": "TypeScript check after editing .ts/.tsx files",
+        "hooks": [
+          {
+            "command": "node \"/Users/chongfeng/.claude/hooks/scripts/post-edit-typecheck.js\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit"
+      },
+      {
+        "description": "Warn about console.log statements after edits",
+        "hooks": [
+          {
+            "command": "node \"/Users/chongfeng/.claude/hooks/scripts/post-edit-console-warn.js\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit"
+      }
+    ],
+    "PreCompact": [
+      {
+        "description": "Save state before context compaction",
+        "hooks": [
+          {
+            "command": "node \"/Users/chongfeng/.claude/hooks/scripts/pre-compact.js\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "description": "Block dev servers outside tmux - ensures you can access logs",
+        "hooks": [
+          {
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(process.platform!=='win32'&&/(npm run dev\\b|pnpm( run)? dev\\b|yarn dev\\b|bun run dev\\b)/.test(cmd)){console.error('[Hook] BLOCKED: Dev server must run in tmux for log access');console.error('[Hook] Use: tmux new-session -d -s dev \\\"npm run dev\\\"');console.error('[Hook] Then: tmux attach -t dev');process.exit(2)}}catch{}console.log(d)})\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "description": "Reminder to use tmux for long-running commands",
+        "hooks": [
+          {
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(process.platform!=='win32'&&!process.env.TMUX&&/(npm (install|test)|pnpm (install|test)|yarn (install|test)?|bun (install|test)|cargo build|make\\b|docker\\b|pytest|vitest|playwright)/.test(cmd)){console.error('[Hook] Consider running in tmux for session persistence');console.error('[Hook] tmux new -s dev  |  tmux attach -t dev')}}catch{}console.log(d)})\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "description": "Reminder before git push to review changes",
+        "hooks": [
+          {
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(/git push/.test(cmd)){console.error('[Hook] Review changes before push...');console.error('[Hook] Continuing with push (remove this hook to add interactive review)')}}catch{}console.log(d)})\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "description": "Doc file warning: warn about non-standard documentation files",
+        "hooks": [
+          {
+            "command": "node \"/Users/chongfeng/.claude/hooks/scripts/pre-write-doc-warn.js\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "description": "Suggest manual compaction at logical intervals",
+        "hooks": [
+          {
+            "command": "node \"/Users/chongfeng/.claude/hooks/scripts/suggest-compact.js\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit|Write"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "description": "Persist session state on end",
+        "hooks": [
+          {
+            "command": "node \"/Users/chongfeng/.claude/hooks/scripts/session-end.js\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      },
+      {
+        "description": "Evaluate session for extractable patterns",
+        "hooks": [
+          {
+            "command": "node \"/Users/chongfeng/.claude/hooks/scripts/evaluate-session.js\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ],
+    "SessionStart": [
+      {
+        "description": "Load previous context and detect package manager on new session",
+        "hooks": [
+          {
+            "command": "node \"/Users/chongfeng/.claude/hooks/scripts/session-start.js\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ],
+    "Stop": [
+      {
+        "description": "Check for console.log in modified files after each response",
+        "hooks": [
+          {
+            "command": "node \"/Users/chongfeng/.claude/hooks/scripts/check-console-log.js\"",
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ]
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "statusLine": {
+    "command": "npx @wangjs-jacky/glm-coding-plan-statusline@latest",
+    "type": "command"
+  }
+}
