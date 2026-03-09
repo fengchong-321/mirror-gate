@@ -306,6 +306,22 @@ curl -X POST http://localhost:8000/api/v1/mock/suites/1/enable
 
 ## 配置说明
 
+### ⚠️ 安全提示
+
+**请勿将敏感信息提交到代码仓库！**
+
+- 所有 API Key、密码、Token 等敏感信息请使用环境变量配置
+- `.env` 文件已添加到 `.gitignore`，不会被提交
+- 生产环境请修改所有默认密码
+
+```bash
+# 复制环境变量模板
+cp .env.example .env
+
+# 编辑 .env 文件，填入你自己的配置
+# NEVER commit .env file to git!
+```
+
 ### 环境变量
 
 | 变量名 | 说明 | 默认值 |
