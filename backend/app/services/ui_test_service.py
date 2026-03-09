@@ -185,58 +185,48 @@ class UiTestService:
             # 解析步骤
             steps = json.loads(case.steps) if case.steps else []
 
-            # 尝试使用真实执行引擎
+            # 使用真实执行引擎
+            from app.services.ui_executor import execute_ui_test
+
+            # 在事件循环中执行异步代码
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
             try:
-                from app.services.ui_executor import execute_ui_test
+                result = loop.run_until_complete(
+                    execute_ui_test(steps, platform, exec_config)
+                )
+            finally:
+                loop.close()
 
-                # 在事件循环中执行异步代码
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                try:
-                    result = loop.run_until_complete(
-                        execute_ui_test(steps, platform, exec_config)
-                    )
-                finally:
-                    loop.close()
+            # 记录步骤结果
+            all_passed = True
+            screenshot_paths = []
 
-                # 记录步骤结果
-                all_passed = True
-                for step_data in result.get("steps", []):
-                    step_result = UiTestStepResult(
-                        execution_id=execution.id,
-                        step_order=step_data.get("order", 0),
-                        keyword="And",
-                        text=step_data.get("action", ""),
-                        status=UiTestStatus.PASSED if step_data.get("success") else UiTestStatus.FAILED,
-                        error_message=step_data.get("error"),
-                        duration_ms=step_data.get("duration_ms", 0),
-                        screenshot_path=step_data.get("screenshot"),
-                    )
-                    self.db.add(step_result)
+            for step_data in result.get("steps", []):
+                step_result = UiTestStepResult(
+                    execution_id=execution.id,
+                    step_order=step_data.get("order", 0),
+                    keyword="And",
+                    text=step_data.get("text", step_data.get("action", "")),
+                    status=UiTestStatus.PASSED if step_data.get("success") else UiTestStatus.FAILED,
+                    error_message=step_data.get("error"),
+                    duration_ms=step_data.get("duration_ms", 0),
+                    screenshot_path=step_data.get("screenshot"),
+                )
+                self.db.add(step_result)
 
-                    if not step_data.get("success"):
-                        all_passed = False
+                if step_data.get("screenshot"):
+                    screenshot_paths.append(step_data["screenshot"])
 
-                execution.status = UiTestStatus.PASSED if all_passed else UiTestStatus.FAILED
-                execution.duration_ms = result.get("total_duration_ms", 0)
+                if not step_data.get("success"):
+                    all_passed = False
 
-                if not result.get("success"):
-                    execution.error_message = result.get("error")
+            execution.status = UiTestStatus.PASSED if all_passed else UiTestStatus.FAILED
+            execution.duration_ms = result.get("total_duration_ms", 0)
+            execution.screenshot_paths = json.dumps(screenshot_paths) if screenshot_paths else None
 
-            except ImportError:
-                # 回退到模拟执行
-                step_results = []
-                all_passed = True
-
-                for idx, step in enumerate(steps):
-                    step_result = self._execute_step_mock(execution.id, idx, step, exec_config)
-                    step_results.append(step_result)
-                    if step_result.status != UiTestStatus.PASSED:
-                        all_passed = False
-                        break
-
-                execution.status = UiTestStatus.PASSED if all_passed else UiTestStatus.FAILED
-                execution.duration_ms = sum(sr.duration_ms or 0 for sr in step_results)
+            if not result.get("success"):
+                execution.error_message = result.get("error")
 
         except Exception as e:
             execution.status = UiTestStatus.ERROR
@@ -245,60 +235,6 @@ class UiTestService:
         self.db.commit()
         self.db.refresh(execution)
         return execution
-
-    def _execute_step_mock(
-        self,
-        execution_id: int,
-        step_order: int,
-        step: Dict[str, Any],
-        config: Optional[Dict[str, Any]] = None
-    ) -> UiTestStepResult:
-        """模拟执行单个步骤（当真实执行引擎不可用时使用）"""
-        import time
-        import random
-        start_time = time.time()
-
-        step_result = UiTestStepResult(
-            execution_id=execution_id,
-            step_order=step_order,
-            keyword=step.get("keyword", "And"),
-            text=step.get("text", ""),
-            status=UiTestStatus.RUNNING,
-        )
-        self.db.add(step_result)
-        self.db.flush()
-
-        try:
-            action = step.get("action")
-            params = step.get("params", {})
-
-            # 模拟执行不同的动作
-            if action == "open_url":
-                pass
-            elif action == "click":
-                pass
-            elif action == "input":
-                pass
-            elif action == "wait":
-                pass
-            elif action == "assert":
-                pass
-            elif action == "screenshot":
-                pass
-
-            # 模拟执行时间
-            time.sleep(random.uniform(0.1, 0.5))
-
-            step_result.status = UiTestStatus.PASSED
-            step_result.duration_ms = int((time.time() - start_time) * 1000)
-
-        except Exception as e:
-            step_result.status = UiTestStatus.FAILED
-            step_result.error_message = str(e)
-            step_result.duration_ms = int((time.time() - start_time) * 1000)
-
-        self.db.commit()
-        return step_result
 
     def batch_execute(self, request: UiBatchExecuteRequest) -> Dict[str, Any]:
         """批量执行UI测试用例"""

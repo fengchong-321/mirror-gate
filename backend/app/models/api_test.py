@@ -5,7 +5,7 @@ This module defines the SQLAlchemy models for API testing.
 
 from datetime import datetime, timezone
 from typing import Optional, List
-from sqlalchemy import Column, Integer, String, Boolean, Text, DateTime, ForeignKey, Enum, JSON
+from sqlalchemy import Column, Integer, String, Boolean, Text, DateTime, ForeignKey, Enum, JSON, Float
 from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
@@ -141,3 +141,85 @@ class ApiTestExecution(Base):
 
     def __repr__(self) -> str:
         return f"<ApiTestExecution(id={self.id}, case_id={self.case_id}, status={self.status})>"
+
+
+class ApiTestReport(Base):
+    """API 测试报告模型"""
+    __tablename__ = "api_test_reports"
+    __allow_unmapped__ = True
+
+    id: int = Column(Integer, primary_key=True, index=True)
+    batch_id: str = Column(String(50), nullable=False, index=True)
+    suite_id: int = Column(Integer, ForeignKey("api_test_suites.id"), nullable=False)
+    name: str = Column(String(200), nullable=False)
+    summary: Optional[str] = Column(Text)  # JSON 格式：{total, passed, failed, error, pass_rate, duration_ms}
+    status: str = Column(String(20), default="running")  # running, completed, failed
+    triggered_by: Optional[str] = Column(String(50))  # manual, scheduler, api
+    started_at: Optional[datetime] = Column(DateTime)
+    completed_at: Optional[datetime] = Column(DateTime)
+    created_at: datetime = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    suite: Optional["ApiTestSuite"] = relationship("ApiTestSuite", back_populates="reports")
+    executions: List["ApiTestExecution"] = relationship(
+        "ApiTestExecution",
+        back_populates="report",
+        cascade="all, delete-orphan"
+    )
+
+    def __repr__(self) -> str:
+        return f"<ApiTestReport(id={self.id}, batch_id={self.batch_id!r}, status={self.status})>"
+
+
+class VariableType(str, enum.Enum):
+    """变量类型枚举"""
+    STRING = "string"
+    NUMBER = "number"
+    BOOLEAN = "boolean"
+    JSON = "json"
+
+
+class ApiTestVariable(Base):
+    """API 测试变量模型"""
+    __tablename__ = "api_test_variables"
+    __allow_unmapped__ = True
+
+    id: int = Column(Integer, primary_key=True, index=True)
+    suite_id: Optional[int] = Column(Integer, ForeignKey("api_test_suites.id"), index=True)
+    name: str = Column(String(100), nullable=False)
+    value: str = Column(Text, nullable=False)
+    type: str = Column(String(20), default="string")  # string, number, boolean, json
+    is_sensitive: bool = Column(Boolean, default=False)  # 敏感数据加密存储
+    description: Optional[str] = Column(Text)
+    created_at: datetime = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
+    )
+
+    # Relationships
+    suite: Optional["ApiTestSuite"] = relationship("ApiTestSuite", back_populates="variables")
+
+    def __repr__(self) -> str:
+        return f"<ApiTestVariable(id={self.id}, name={self.name!r})>"
+
+
+# Add back-references to ApiTestSuite
+ApiTestSuite.reports = relationship(
+    "ApiTestReport",
+    back_populates="suite",
+    cascade="all, delete-orphan"
+)
+
+ApiTestSuite.variables = relationship(
+    "ApiTestVariable",
+    back_populates="suite",
+    cascade="all, delete-orphan"
+)
+
+# Add report relationship to ApiTestExecution
+ApiTestExecution.report_id = Column(Integer, ForeignKey("api_test_reports.id"), index=True)
+ApiTestExecution.report = relationship("ApiTestReport", back_populates="executions")
+ApiTestExecution.retry_count = Column(Integer, default=0)
+ApiTestExecution.max_retries = Column(Integer, default=0)

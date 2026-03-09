@@ -221,7 +221,12 @@ class AuthService:
         access_token, expires_at = self.create_access_token(user.id, user.username, user.role)
         refresh_token = self.create_refresh_token()
 
-        # Create session
+        # Revoke existing sessions for this user
+        self.db.query(UserSession).filter(
+            UserSession.user_id == user.id
+        ).delete()
+
+        # Create new session
         session = UserSession(
             user_id=user.id,
             token=access_token,
