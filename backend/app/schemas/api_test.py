@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 from typing import Optional, List, Any, Dict
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from app.models.api_test import ExecutionStatus
+from app.models.api_test import ExecutionStatus, VariableType
 
 
 # ============ Assertion Schemas ============
@@ -40,7 +40,7 @@ class ApiTestCaseBase(BaseModel):
 
 
 class ApiTestCaseCreate(ApiTestCaseBase):
-    suite_id: int
+    suite_id: Optional[int] = None  # Set by route handler from path parameter
 
 
 class ApiTestCaseUpdate(BaseModel):
@@ -157,3 +157,101 @@ class BatchExecuteResponse(BaseModel):
     batch_id: str
     total: int
     status: str
+
+
+# ============ Report Schemas ============
+
+class ApiTestReportCreate(BaseModel):
+    suite_id: int
+    name: str = Field(..., min_length=1, max_length=200)
+    triggered_by: Optional[str] = "manual"
+
+
+class ApiTestReportResponse(BaseModel):
+    id: int
+    batch_id: str
+    suite_id: int
+    name: str
+    summary: Optional[str] = None
+    status: str
+    triggered_by: Optional[str] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ApiTestReportListResponse(BaseModel):
+    total: int
+    items: List[ApiTestReportResponse]
+
+
+class ApiTestReportSummaryResponse(BaseModel):
+    id: int
+    batch_id: str
+    suite_id: int
+    name: str
+    summary: Optional[Dict[str, Any]] = None
+    status: str
+    triggered_by: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ============ Variable Schemas ============
+
+class ApiTestVariableCreate(BaseModel):
+    suite_id: Optional[int] = None
+    name: str = Field(..., min_length=1, max_length=100)
+    value: str
+    type: str = "string"
+    is_sensitive: bool = False
+    description: Optional[str] = None
+
+
+class ApiTestVariableUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    value: Optional[str] = None
+    type: Optional[str] = None
+    is_sensitive: Optional[bool] = None
+    description: Optional[str] = None
+
+
+class ApiTestVariableResponse(BaseModel):
+    id: int
+    suite_id: Optional[int] = None
+    name: str
+    value: str  # Note: In production, consider hiding sensitive values
+    type: str
+    is_sensitive: bool
+    description: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ApiTestVariableListResponse(BaseModel):
+    total: int
+    items: List[ApiTestVariableResponse]
+
+
+# ============ Statistics Schemas ============
+
+class SuiteStatisticsResponse(BaseModel):
+    total_cases: int
+    enabled_cases: int
+    total_executions: int
+    passed_count: int
+    failed_count: int
+    error_count: int
+    report_count: int
+    pass_rate: str
+
+
+class ExecutionComparisonResponse(BaseModel):
+    execution_1: Dict[str, Any]
+    execution_2: Dict[str, Any]
+    differences: List[Dict[str, Any]]

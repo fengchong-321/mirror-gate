@@ -85,10 +85,10 @@ class MockInterceptor:
             return True  # No whitelist means allow all
 
         for whitelist in whitelists:
-            if whitelist.type == WhitelistType.CLIENTID:
+            if whitelist.type == WhitelistType.CLIENT_ID:
                 if client_info.get("clientId") == whitelist.value:
                     return True
-            elif whitelist.type == WhitelistType.USERID:
+            elif whitelist.type == WhitelistType.USER_ID:
                 if client_info.get("userId") == whitelist.value:
                     return True
             elif whitelist.type == WhitelistType.VID:

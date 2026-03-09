@@ -49,10 +49,6 @@ class UIExecutor(ABC):
         """Take a screenshot."""
         pass
 
-
-class PlaywrightExecutor(UIExecutor):
-    """Playwright-based executor for Web UI testing."""
-
     def __init__(self):
         self.browser = None
         self.page = None

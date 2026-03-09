@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import get_settings
-from app.api.v1 import mock, api_test, ui_test, auth, scheduler, dashboard, testcase, mock_compare
+from app.api.v1 import mock, api_test, ui_test, auth, scheduler, dashboard, testcase, mock_compare, api_test_report
 from app.services.mock_interceptor import MockInterceptor, MockCompareTool
 from app.database import SessionLocal
 from typing import Optional
@@ -159,6 +159,7 @@ async def mock_interceptor_middleware(request: Request, call_next):
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(mock.router, prefix="/api/v1")
 app.include_router(api_test.router, prefix="/api/v1")
+app.include_router(api_test_report.router, prefix="/api/v1")
 app.include_router(ui_test.router, prefix="/api/v1")
 app.include_router(scheduler.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")

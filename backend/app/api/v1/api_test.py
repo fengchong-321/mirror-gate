@@ -3,7 +3,7 @@
 This module defines the REST API endpoints for API testing.
 """
 
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -274,3 +274,141 @@ def get_execution(
     if not execution:
         raise HTTPException(status_code=404, detail=f"Execution with id {execution_id} not found")
     return ApiTestExecutionResponse.model_validate(execution)
+
+
+# ============ Variable Endpoints ============
+
+@router.get(
+    "/suites/{suite_id}/variables",
+    response_model=List[dict],
+    summary="List variables for a suite",
+)
+def list_variables(
+    suite_id: int,
+    service: ApiTestService = Depends(get_api_test_service),
+):
+    """List all variables for a suite."""
+    from app.models.api_test import ApiTestVariable
+    variables = service.db.query(ApiTestVariable).filter(
+        ApiTestVariable.suite_id == suite_id
+    ).all()
+    return [
+        {
+            "id": v.id,
+            "name": v.name,
+            "value": v.value,
+            "type": v.type,
+            "is_sensitive": v.is_sensitive,
+            "description": v.description,
+        }
+        for v in variables
+    ]
+
+
+@router.post(
+    "/suites/{suite_id}/variables",
+    status_code=201,
+    summary="Create a new variable",
+)
+def create_variable(
+    suite_id: int,
+    variable_data: dict,
+    service: ApiTestService = Depends(get_api_test_service),
+):
+    """Create a new variable for a suite."""
+    from app.models.api_test import ApiTestVariable
+    from app.schemas.api_test import ApiTestVariableCreate
+
+    # Parse the request data
+    var = ApiTestVariableCreate(
+        suite_id=suite_id,
+        name=variable_data.get("name"),
+        value=variable_data.get("value"),
+        type=variable_data.get("type", "string"),
+        is_sensitive=variable_data.get("is_sensitive", False),
+        description=variable_data.get("description"),
+    )
+
+    # Check if variable already exists
+    existing = service.db.query(ApiTestVariable).filter(
+        ApiTestVariable.suite_id == suite_id,
+        ApiTestVariable.name == var.name
+    ).first()
+
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Variable '{var.name}' already exists")
+
+    # Create the variable
+    db_var = ApiTestVariable(**var.model_dump())
+    service.db.add(db_var)
+    service.db.commit()
+    service.db.refresh(db_var)
+
+    return {
+        "id": db_var.id,
+        "name": db_var.name,
+        "value": db_var.value,
+        "type": db_var.type,
+        "is_sensitive": db_var.is_sensitive,
+    }
+
+
+@router.put(
+    "/variables/{variable_id}",
+    summary="Update a variable",
+)
+def update_variable(
+    variable_id: int,
+    variable_data: dict,
+    service: ApiTestService = Depends(get_api_test_service),
+):
+    """Update an existing variable."""
+    from app.models.api_test import ApiTestVariable
+
+    var = service.db.query(ApiTestVariable).filter(ApiTestVariable.id == variable_id).first()
+    if not var:
+        raise HTTPException(status_code=404, detail=f"Variable with id {variable_id} not found")
+
+    # Update fields
+    if "name" in variable_data:
+        var.name = variable_data["name"]
+    if "value" in variable_data:
+        var.value = variable_data["value"]
+    if "type" in variable_data:
+        var.type = variable_data["type"]
+    if "is_sensitive" in variable_data:
+        var.is_sensitive = variable_data["is_sensitive"]
+    if "description" in variable_data:
+        var.description = variable_data["description"]
+
+    service.db.commit()
+    service.db.refresh(var)
+
+    return {
+        "id": var.id,
+        "name": var.name,
+        "value": var.value,
+        "type": var.type,
+    }
+
+
+@router.delete(
+    "/variables/{variable_id}",
+    status_code=204,
+    summary="Delete a variable",
+)
+def delete_variable(
+    variable_id: int,
+    service: ApiTestService = Depends(get_api_test_service),
+):
+    """Delete a variable by ID."""
+    from app.models.api_test import ApiTestVariable
+
+    var = service.db.query(ApiTestVariable).filter(ApiTestVariable.id == variable_id).first()
+    if not var:
+        raise HTTPException(status_code=404, detail=f"Variable with id {variable_id} not found")
+
+    service.db.delete(var)
+    service.db.commit()
+
+    return None
