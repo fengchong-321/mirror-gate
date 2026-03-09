@@ -2,6 +2,20 @@
 
 个人 Claude Code 配置仓库，包含自定义 skills、rules、commands 和 agents。
 
+## ⚠️ 安全提示
+
+**请勿将敏感信息提交到代码仓库！**
+
+- `.mcp.json` 包含 MCP 服务配置，可能含有 API Key，已添加到 `.gitignore`
+- `settings.json` 中的敏感配置请使用环境变量
+- 如需使用此配置，请创建你自己的 MCP 服务账号并填入你自己的 API Key
+
+```bash
+# 创建你自己的 MCP 配置
+cp .mcp.json.example .mcp.json
+# 编辑 .mcp.json，填入你自己的 API Key
+```
+
 ## 目录结构
 
 ```
