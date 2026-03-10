@@ -15,6 +15,9 @@ help:
 	@echo "  make logs         - 查看所有服务日志"
 	@echo "  make clean        - 清理所有容器和数据卷"
 	@echo "  make test         - 运行所有测试"
+	@echo "  make test-e2e     - 运行 E2E 测试"
+	@echo "  make test-e2e-ui  - 运行 E2E 测试（UI 模式）"
+	@echo "  make test-e2e-headed - 运行 E2E 测试（有头模式）"
 	@echo "  make backend      - 启动后端开发服务器"
 	@echo "  make frontend     - 启动前端开发服务器"
 
@@ -116,7 +119,7 @@ clean:
 	@echo "✅ 清理完成"
 
 # 运行所有测试
-test: test-backend test-frontend
+test: test-backend test-frontend test-e2e
 
 test-backend:
 	@echo "🧪 运行后端测试..."
@@ -125,6 +128,18 @@ test-backend:
 test-frontend:
 	@echo "🧪 运行前端测试..."
 	cd frontend && npm run test
+
+test-e2e:
+	@echo "🧪 运行 E2E 测试..."
+	cd frontend && npx playwright install chromium && npx playwright test
+
+test-e2e-ui:
+	@echo "🎨 运行 E2E 测试（UI 模式）..."
+	cd frontend && npx playwright test --ui
+
+test-e2e-headed:
+	@echo "🎭 运行 E2E 测试（有头模式）..."
+	cd frontend && npx playwright test --headed
 
 # 启动后端开发服务器
 backend:
