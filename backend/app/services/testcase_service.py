@@ -112,9 +112,19 @@ class TestCaseService:
         )
         count_dict = {item.group_id: item.count for item in case_counts}
 
+        # Deduplicate groups by name within same parent (keep lowest ID)
+        seen = {}
+        unique_groups = []
+        for group in groups:
+            key = (group.parent_id, group.name.lower().strip())
+            if key not in seen:
+                seen[key] = group.id
+                unique_groups.append(group)
+            # Skip duplicate groups (same parent + name)
+
         # Build tree structure
         def build_tree(parent_id: Optional[int] = None) -> List[TreeNode]:
-            children = [g for g in groups if g.parent_id == parent_id]
+            children = [g for g in unique_groups if g.parent_id == parent_id]
             nodes = []
             for group in children:
                 node = TreeNode(
@@ -356,11 +366,10 @@ class TestCaseService:
 
         if keyword:
             search_pattern = f"%{keyword}%"
-            # Search in title or in steps JSON content
+            # Search in title only (steps JSON search may fail on some DB configurations)
             query = query.filter(
                 or_(
                     TestCase.title.ilike(search_pattern),
-                    func.cast(TestCase.steps, Text).ilike(search_pattern),
                 )
             )
 
