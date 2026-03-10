@@ -25,39 +25,35 @@ MAX_ACTION_LENGTH = 50
 
 
 class CaseType(str, enum.Enum):
-    """用例类型 - 定义见设计文档 4.2"""
-    FUNCTIONAL = "功能测试"
-    PERFORMANCE = "性能测试"
-    SECURITY = "安全测试"
-    COMPATIBILITY = "兼容性测试"
-    UX = "用户体验测试"
-    OTHER = "其他"
+    """用例类型 - 与数据库枚举一致"""
+    FUNCTIONAL = "FUNCTIONAL"
+    API = "API"
+    UI = "UI"
+    PERFORMANCE = "PERFORMANCE"
+    SECURITY = "SECURITY"
 
 
 class Platform(str, enum.Enum):
-    """所属平台 - 定义见设计文档 4.2"""
-    RN = "RN"           # Android + H5
-    SERVER = "服务端"
-    MINI_PROGRAM = "小程序"
-    WEB = "Web"
-    H5 = "H5"
+    """所属平台 - 与数据库枚举一致"""
+    WEB = "WEB"
+    IOS = "IOS"
+    ANDROID = "ANDROID"
+    MINI_PROGRAM = "MINI_PROGRAM"
 
 
 class Priority(str, enum.Enum):
-    """重要程度 - 定义见设计文档 4.2，P0最高，P4最低"""
-    P0 = "P0"
-    P1 = "P1"
-    P2 = "P2"
-    P3 = "P3"
-    P4 = "P4"
+    """重要程度 - 与数据库枚举一致"""
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
 
 
 class CaseStatus(str, enum.Enum):
-    """用例状态 - 定义见设计文档 5.2"""
-    DRAFT = "草稿"
-    REVIEWING = "评审中"
-    PASSED = "通过"
-    DEPRECATED = "废弃"
+    """用例状态 - 与数据库枚举一致"""
+    DRAFT = "DRAFT"
+    ACTIVE = "ACTIVE"
+    DEPRECATED = "DEPRECATED"
 
 
 class TestCaseGroup(Base):
@@ -121,7 +117,7 @@ class TestCase(Base):
     order: int = Column(Integer, default=0)  # 排序序号
     case_type: CaseType = Column(Enum(CaseType), default=CaseType.FUNCTIONAL)
     platform: Platform = Column(Enum(Platform), default=Platform.WEB)
-    priority: Priority = Column(Enum(Priority), default=Priority.P2)
+    priority: Priority = Column(Enum(Priority), default=Priority.MEDIUM)
     is_core: bool = Column(Boolean, default=False)  # 核心用例
     owner: Optional[str] = Column(String(MAX_USER_LENGTH))  # 维护人
     developer: Optional[str] = Column(String(MAX_USER_LENGTH))  # 开发负责人
