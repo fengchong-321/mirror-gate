@@ -97,28 +97,113 @@ MirrorGate 是一款面向测试团队的一站式测试平台，集成 Mock 服
 - Node.js 18+ (开发环境)
 - Python 3.11+ (开发环境)
 
-### 使用 Docker Compose 部署
+### 5 分钟快速启动（推荐新手）
+
+使用 Makefile 一键启动（macOS/Linux）：
 
 ```bash
-# 克隆项目
+# 1. 克隆项目
 git clone https://github.com/fengchong-321/mirror-gate.git
 cd mirror-gate
 
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env 设置 MYSQL_PASSWORD 等敏感配置
+# 2. 一键启动（自动完成所有初始化）
+make dev
 
-# 启动服务
+# 3. 验证服务
+make verify
+```
+
+### 使用 Docker Compose 部署（手动步骤）
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/fengchong-321/mirror-gate.git
+cd mirror-gate
+
+# 2. 配置环境变量
+cp .env.example .env
+# ⚠️ 重要：编辑 .env 修改 MYSQL_PASSWORD
+
+# 3. 启动服务
 docker-compose up -d
 
-# 查看服务状态
-docker-compose ps
+# 4. 等待数据库就绪（约 10 秒）
+sleep 10
+
+# 5. 初始化数据库
+make init-db
+
+# 6. 创建管理员账号
+make create-admin
 ```
 
 服务启动后访问：
 - 前端界面：http://localhost
 - API 文档：http://localhost:8000/docs
 - ReDoc 文档：http://localhost:8000/redoc
+
+### ✅ 验证安装成功
+
+运行以下检查确认服务正常：
+
+```bash
+make verify
+```
+
+或者手动检查：
+
+| 检查项 | 命令 | 预期结果 |
+|--------|------|----------|
+| 后端健康 | `curl http://localhost:8000/health` | `{"status": "healthy"}` |
+| 前端页面 | `curl http://localhost` | 返回 HTML |
+| 数据库连接 | `docker-compose exec backend python -c "from app.database import SessionLocal; SessionLocal().close(); print('OK')"` | `OK` |
+| API 文档 | 访问 http://localhost:8000/docs | 显示 Swagger UI |
+
+### 首次登录后做什么？
+
+1. **创建第一个 Mock 套件**：进入 Mock 管理 → 新建套件
+2. **配置 Mock 规则**：添加 URL 匹配规则和响应
+3. **启用 Mock 服务**：点击启用按钮
+4. **测试 API**：使用 Postman 或 curl 验证 Mock 响应
+
+---
+
+### 本地开发环境
+
+#### 后端
+
+```bash
+cd backend
+
+# 创建虚拟环境
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# venv\Scripts\activate   # Windows
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 数据库迁移
+alembic upgrade head
+
+# 启动开发服务器
+uvicorn app.main:app --reload --port 8000
+```
+
+#### 前端
+
+```bash
+cd frontend
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+
+# 构建生产版本
+npm run build
+```
 
 ### 本地开发环境
 
@@ -351,6 +436,171 @@ pytest tests/ -v --cov=app
 cd frontend
 npm run test:e2e
 ```
+
+---
+
+## 故障排查
+
+### 常见问题 FAQ
+
+#### 1. 服务启动失败："Connection refused"
+
+**原因**：MySQL 容器尚未启动完成
+
+**解决方案**：
+```bash
+# 查看容器状态
+docker-compose ps
+
+# 等待 MySQL 就绪（看到 "healthy" 状态）
+docker-compose logs mysql | grep "ready for connections"
+
+# 重启服务
+docker-compose down && docker-compose up -d
+```
+
+#### 2. 数据库迁移失败："Table doesn't exist"
+
+**原因**：数据库未初始化
+
+**解决方案**：
+```bash
+# 重新运行迁移
+make init-db
+# 或者手动执行
+docker-compose exec backend alembic upgrade head
+```
+
+#### 3. 前端无法连接后端
+
+**原因**：代理配置问题或后端未启动
+
+**解决方案**：
+```bash
+# 检查后端日志
+docker-compose logs backend
+
+# 验证后端可访问
+curl http://localhost:8000/health
+
+# 重启前端容器
+docker-compose restart frontend
+```
+
+#### 4. 管理员账号无法登录
+
+**原因**：初始管理员账号未创建
+
+**解决方案**：
+```bash
+# 创建管理员账号
+make create-admin
+# 默认账号：admin / admin123
+
+# 或者手动执行
+docker-compose exec backend python create_admin.py
+```
+
+#### 5. Redis 连接失败
+
+**原因**：Redis 容器未启动
+
+**解决方案**：
+```bash
+# 检查 Redis 状态
+docker-compose ps redis
+
+# 重启 Redis
+docker-compose restart redis
+
+# 验证连接
+docker-compose exec redis redis-cli ping
+# 应返回：PONG
+```
+
+#### 6. 端口被占用："Address already in use"
+
+**原因**：80 或 8000 端口已被其他服务占用
+
+**解决方案**：
+```bash
+# 查找占用端口的进程
+lsof -i :80
+lsof -i :8000
+
+# 停止占用进程或修改 docker-compose.yml 端口映射
+```
+
+#### 7. Docker 内存不足
+
+**症状**：容器反复重启，OOMKilled 错误
+
+**解决方案**：
+```bash
+# 增加 Docker Desktop 内存限制（macOS/Windows）
+# Docker Desktop → Preferences → Resources → Memory → 调整为 4GB+
+
+# 或者清理未使用的容器
+docker system prune -a
+```
+
+### 日志查看命令
+
+```bash
+# 查看所有服务日志
+docker-compose logs -f
+
+# 查看特定服务日志
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f mysql
+
+# 查看最近 100 行
+docker-compose logs --tail=100 backend
+```
+
+### 重置环境
+
+如果问题无法解决，可以完全重置：
+
+```bash
+# 1. 停止并删除所有容器和数据卷
+docker-compose down -v
+
+# 2. 清理
+docker system prune -a
+
+# 3. 重新启动
+docker-compose up -d
+
+# 4. 重新初始化
+make init-db
+make create-admin
+```
+
+---
+
+## 脚本和工具
+
+### Makefile 命令
+
+| 命令 | 说明 |
+|------|------|
+| `make dev` | 一键启动开发环境（包含所有初始化） |
+| `make init-db` | 初始化数据库表结构 |
+| `make create-admin` | 创建管理员账号（admin/admin123） |
+| `make verify` | 验证所有服务健康状态 |
+| `make logs` | 查看所有服务日志 |
+| `make clean` | 清理所有容器和数据卷 |
+| `make test` | 运行所有测试 |
+
+### Scripts 目录
+
+位于项目根目录的 `scripts/`：
+
+- `seed_mock_data.py` - 填充 Mock 测试数据
+- `backup_db.sh` - 数据库备份脚本
+- `reset_env.sh` - 重置开发环境
 
 ---
 
