@@ -182,3 +182,10 @@ backup-db:
 	@mkdir -p backups
 	docker-compose exec mysql mysqldump -u root -p$${MYSQL_PASSWORD} mirror_gate > backups/mysql-backup-$$(date +%Y%m%d-%H%M%S).sql
 	@echo "✅ 数据库备份完成：backups/"
+
+# 清理重复分组
+clean-duplicate-groups:
+	@echo "🧹 清理重复分组数据..."
+	docker-compose cp backend/clean_duplicate_groups.py backend:/app/clean_duplicate_groups.py
+	docker-compose exec -T backend python clean_duplicate_groups.py
+	@echo "✅ 清理完成"
