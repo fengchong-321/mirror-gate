@@ -1,7 +1,7 @@
 # MirrorGate Makefile
 # 一键开发和部署工具
 
-.PHONY: help dev init-db create-admin verify logs clean test backend frontend
+.PHONY: help dev init-db create-admin seed-demo clean-demo verify logs clean test backend frontend
 
 # 默认目标
 help:
@@ -11,6 +11,8 @@ help:
 	@echo "  make dev          - 一键启动开发环境"
 	@echo "  make init-db      - 初始化数据库"
 	@echo "  make create-admin - 创建管理员账号"
+	@echo "  make seed-demo    - 加载演示数据"
+	@echo "  make clean-demo   - 清理演示数据"
 	@echo "  make verify       - 验证服务健康状态"
 	@echo "  make logs         - 查看所有服务日志"
 	@echo "  make clean        - 清理所有容器和数据卷"
@@ -45,6 +47,9 @@ dev: check-docker
 	@echo "Step 5: 创建管理员账号..."
 	$(MAKE) create-admin
 	@echo ""
+	@echo "Step 6: 加载演示数据..."
+	$(MAKE) seed-demo
+	@echo ""
 	@echo "✅ 开发环境启动完成!"
 	@echo ""
 	@echo "访问地址:"
@@ -72,6 +77,18 @@ create-admin:
 	@echo "✅ 管理员账号创建完成"
 	@echo "  用户名：admin"
 	@echo "  密码：admin123"
+
+# 加载演示数据
+seed-demo:
+	@echo "📦 加载演示数据..."
+	@docker-compose exec -T backend python scripts/seed_demo_data.py
+	@echo "✅ 演示数据加载完成"
+
+# 清理演示数据
+clean-demo:
+	@echo "🧹 清理演示数据..."
+	@docker-compose exec -T backend python scripts/clean_demo_data.py
+	@echo "✅ 演示数据清理完成"
 
 # 验证服务健康状态
 verify:
