@@ -1,0 +1,54 @@
+{
+  "suites": [
+    {
+      "name": "机票服务 Mock",
+      "description": "模拟航班搜索和预订 API",
+      "path_prefix": "/api/flights",
+      "match_type": "any",
+      "rules": [
+        {
+          "name": "搜索航班",
+          "field": "path",
+          "operator": "equals",
+          "value": "/api/flights/search",
+          "method": "GET",
+          "response_json": "{\"code\":0,\"data\":{\"flights\":[{\"flightNo\":\"CA1234\",\"from\":\"北京\",\"to\":\"上海\",\"price\":890,\"departure\":\"08:00\",\"arrival\":\"10:00\"},{\"flightNo\":\"MU5678\",\"from\":\"北京\",\"to\":\"上海\",\"price\":950,\"departure\":\"10:30\",\"arrival\":\"12:30\"}],\"total\":2}}"
+        },
+        {
+          "name": "航班详情",
+          "field": "path",
+          "operator": "contains",
+          "value": "/api/flights/",
+          "method": "GET",
+          "response_json": "{\"code\":0,\"data\":{\"flightNo\":\"CA1234\",\"aircraft\":\"空客 A320\",\"seats\":164,\"airline\":\"中国国际航空\"}}"
+        }
+      ],
+      "whitelists": []
+    },
+    {
+      "name": "酒店预订 Mock",
+      "description": "模拟酒店搜索和预订 API",
+      "path_prefix": "/api/hotels",
+      "match_type": "any",
+      "rules": [
+        {
+          "name": "搜索酒店",
+          "field": "path",
+          "operator": "equals",
+          "value": "/api/hotels/search",
+          "method": "GET",
+          "response_json": "{\"code\":0,\"data\":{\"hotels\":[{\"id\":1,\"name\":\"北京饭店\",\"stars\":5,\"price\":1200,\"location\":\"北京市中心\"},{\"id\":2,\"name\":\"上海大酒店\",\"stars\":4,\"price\":800,\"location\":\"上海外滩\"}],\"total\":2}}"
+        },
+        {
+          "name": "房间详情",
+          "field": "path",
+          "operator": "contains",
+          "value": "/api/hotels/",
+          "method": "GET",
+          "response_json": "{\"code\":0,\"data\":{\"room\":{\"id\":101,\"type\":\"豪华大床房\",\"price\":1200,\"amenities\":[\"WiFi\",\"空调\",\"迷你吧\"]}}}"
+        }
+      ],
+      "whitelists": []
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "suites": [
+    {
+      "name": "机票 API 测试",
+      "description": "测试机票搜索和预订 API",
+      "base_url": "http://localhost:8000/api/flights",
+      "cases": [
+        {
+          "name": "搜索航班 - 验证返回结构",
+          "description": "验证航班搜索接口返回正确的数据结构",
+          "request_url": "/search",
+          "request_method": "GET",
+          "assertions": "[{\"type\":\"status_code\",\"expected\":200},{\"type\":\"json_path\",\"path\":\"$.code\",\"expected\":0},{\"type\":\"json_path\",\"path\":\"$.data.flights\",\"expected\":\"exists\"}]"
+        },
+        {
+          "name": "搜索航班 - 验证分页参数",
+          "description": "验证分页参数正常工作",
+          "request_url": "/search?page=1&size=10",
+          "request_method": "GET",
+          "assertions": "[{\"type\":\"status_code\",\"expected\":200},{\"type\":\"json_path\",\"path\":\"$.data.total\",\"expected\":\"exists\"}]"
+        }
+      ]
+    },
+    {
+      "name": "酒店 API 测试",
+      "description": "测试酒店搜索和预订 API",
+      "base_url": "http://localhost:8000/api/hotels",
+      "cases": [
+        {
+          "name": "搜索酒店 - 验证返回结构",
+          "description": "验证酒店搜索接口返回正确的数据结构",
+          "request_url": "/search",
+          "request_method": "GET",
+          "assertions": "[{\"type\":\"status_code\",\"expected\":200},{\"type\":\"json_path\",\"path\":\"$.code\",\"expected\":0},{\"type\":\"json_path\",\"path\":\"$.data.hotels\",\"expected\":\"exists\"}]"
+        },
+        {
+          "name": "房间详情 - 验证房间信息",
+          "description": "验证房间详情接口返回完整信息",
+          "request_url": "/1/rooms/101",
+          "request_method": "GET",
+          "assertions": "[{\"type\":\"status_code\",\"expected\":200},{\"type\":\"json_path\",\"path\":\"$.data.room.type\",\"expected\":\"exists\"}]"
+        }
+      ]
+    }
+  ]
+}
