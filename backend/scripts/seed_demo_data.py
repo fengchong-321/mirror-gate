@@ -25,8 +25,6 @@ from app.models.api_test import ApiTestSuite, ApiTestCase, AssertType
 from app.models.testcase import (
     TestCaseGroup,
     TestCase,
-    CaseType,
-    Platform as TestCasePlatform,
     Priority,
     CaseStatus,
 )
@@ -204,10 +202,10 @@ def create_testcase_groups(db: Session) -> None:
                 title=title,
                 code=f"TC_{group.id}_{i + 1:03d}",  # Generate unique code
                 order=i,
-                case_type=CaseType(case_data.get("case_type", "FUNCTIONAL")),
-                platform=TestCasePlatform(case_data.get("platform", "WEB")),
-                priority=Priority(case_data.get("priority", "MEDIUM")),
-                status=CaseStatus(case_data.get("status", "DRAFT")),
+                case_type=case_data.get("case_type", "FUNCTIONAL"),
+                platform=case_data.get("platform", "WEB"),
+                priority=case_data.get("priority", "MEDIUM"),
+                status=case_data.get("status", "DRAFT"),
                 steps=steps_json,
                 is_core=case_data.get("priority") == "CRITICAL",
                 created_by="system",
