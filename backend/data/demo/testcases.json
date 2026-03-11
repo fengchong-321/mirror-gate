@@ -1,0 +1,61 @@
+{
+  "groups": [
+    {
+      "name": "机票模块",
+      "description": "机票相关测试用例",
+      "order": 1,
+      "parent_id": null,
+      "cases": [
+        {"title": "搜索航班 - 按出发地搜索", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "HIGH", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"输入出发地\",\"expected\":\"显示出发地选择器\"},{\"action\":\"选择北京\",\"expected\":\"北京被选中\"}]}"},
+        {"title": "搜索航班 - 按目的地搜索", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "HIGH", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"输入目的地\",\"expected\":\"显示目的地选择器\"},{\"action\":\"选择上海\",\"expected\":\"上海被选中\"}]}"},
+        {"title": "搜索航班 - 按日期筛选", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "MEDIUM", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"选择出发日期\",\"expected\":\"显示日期选择器\"}]}"},
+        {"title": "搜索航班 - 按舱位筛选", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "MEDIUM", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"选择舱位\",\"expected\":\"显示舱位选项\"}]}"},
+        {"title": "搜索航班 - 组合条件搜索", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "HIGH", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"输入完整条件\",\"expected\":\"显示匹配的航班\"}]}"},
+        {"title": "预订流程 - 选择航班", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "CRITICAL", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"点击航班\",\"expected\":\"进入预订页面\"}]}"},
+        {"title": "预订流程 - 填写乘客信息", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "CRITICAL", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"填写乘客姓名\",\"expected\":\"姓名保存成功\"},{\"action\":\"填写身份证号\",\"expected\":\"身份证号验证通过\"}]}"},
+        {"title": "预订流程 - 选择座位", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "MEDIUM", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"选择座位\",\"expected\":\"座位被选中\"}]}"},
+        {"title": "预订流程 - 支付订单", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "CRITICAL", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"点击支付\",\"expected\":\"跳转支付页面\"}]}"},
+        {"title": "机票退改签 - 申请退票", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "HIGH", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"选择订单\",\"expected\":\"显示订单详情\"},{\"action\":\"点击退票\",\"expected\":\"显示退票规则\"}]}"}
+      ]
+    },
+    {
+      "name": "酒店模块",
+      "description": "酒店相关测试用例",
+      "order": 2,
+      "parent_id": null,
+      "cases": [
+        {"title": "搜索酒店 - 按城市搜索", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "HIGH", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"输入城市\",\"expected\":\"显示酒店列表\"}]}"},
+        {"title": "搜索酒店 - 按价格筛选", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "MEDIUM", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"设置价格区间\",\"expected\":\"显示价格范围内的酒店\"}]}"},
+        {"title": "搜索酒店 - 按星级筛选", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "MEDIUM", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"选择星级\",\"expected\":\"显示对应星级的酒店\"}]}"},
+        {"title": "搜索酒店 - 按设施筛选", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "LOW", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"选择设施\",\"expected\":\"显示有该设施的酒店\"}]}"},
+        {"title": "搜索酒店 - 查看酒店详情", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "HIGH", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"点击酒店\",\"expected\":\"显示酒店详情页\"}]}"},
+        {"title": "订单管理 - 创建订单", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "CRITICAL", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"选择房间\",\"expected\":\"进入订单页面\"},{\"action\":\"填写入住信息\",\"expected\":\"信息保存成功\"}]}"},
+        {"title": "订单管理 - 取消订单", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "HIGH", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"选择订单\",\"expected\":\"显示取消按钮\"},{\"action\":\"确认取消\",\"expected\":\"订单状态更新\"}]}"},
+        {"title": "订单管理 - 订单评价", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "LOW", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"入住完成后\",\"expected\":\"显示评价入口\"}]}"}
+      ]
+    },
+    {
+      "name": "用户模块",
+      "description": "用户相关测试用例",
+      "order": 3,
+      "parent_id": null,
+      "cases": [
+        {"title": "登录 - 用户名密码登录", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "CRITICAL", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"输入用户名\",\"expected\":\"用户名格式正确\"},{\"action\":\"输入密码\",\"expected\":\"密码被隐藏\"},{\"action\":\"点击登录\",\"expected\":\"登录成功\"}]}"},
+        {"title": "登录 - 手机号验证码登录", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "HIGH", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"输入手机号\",\"expected\":\"手机号格式正确\"},{\"action\":\"获取验证码\",\"expected\":\"验证码发送成功\"}]}"},
+        {"title": "注册 - 用户名注册", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "HIGH", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"输入用户名\",\"expected\":\"用户名可用\"},{\"action\":\"设置密码\",\"expected\":\"密码强度检测\"}]}"},
+        {"title": "注册 - 手机号注册", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "HIGH", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"输入手机号\",\"expected\":\"手机号未注册\"},{\"action\":\"设置密码\",\"expected\":\"密码设置成功\"}]}"}
+      ]
+    },
+    {
+      "name": "支付模块",
+      "description": "支付相关测试用例",
+      "order": 4,
+      "parent_id": null,
+      "cases": [
+        {"title": "支付流程 - 选择支付方式", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "CRITICAL", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"进入支付页面\",\"expected\":\"显示支付方式选项\"},{\"action\":\"选择支付方式\",\"expected\":\"方式被选中\"}]}"},
+        {"title": "支付流程 - 完成支付", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "CRITICAL", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"确认支付\",\"expected\":\"跳转支付网关\"},{\"action\":\"输入密码\",\"expected\":\"支付成功\"}]}"},
+        {"title": "退款流程 - 申请退款", "case_type": "FUNCTIONAL", "platform": "WEB", "priority": "HIGH", "status": "ACTIVE", "steps": "{\"steps\":[{\"action\":\"选择订单\",\"expected\":\"显示退款按钮\"},{\"action\":\"填写退款原因\",\"expected\":\"原因保存成功\"}]}"}
+      ]
+    }
+  ]
+}
