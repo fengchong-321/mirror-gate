@@ -135,7 +135,12 @@ make init-db
 
 # 6. 创建管理员账号
 make create-admin
+
+# 7. 加载演示数据（可选）
+make seed-demo
 ```
+
+> **提示**：首次启动后，系统会自动加载旅游电商演示数据。如需手动加载或清理，请参考下文"演示数据"章节。
 
 服务启动后访问：
 - 前端界面：http://localhost
@@ -439,6 +444,30 @@ npm run test:e2e
 
 ---
 
+## 演示数据
+
+首次启动后，系统会自动加载旅游电商演示数据：
+
+### 包含内容
+
+| 模块 | 演示数据 |
+|------|---------|
+| Mock 服务 | 机票服务 Mock、酒店预订 Mock |
+| API 测试 | 机票 API 测试套件、酒店 API 测试套件 |
+| 用例管理 | 机票模块、酒店模块、用户模块、支付模块（共 25 用例） |
+
+### 管理演示数据
+
+```bash
+# 手动加载演示数据
+make seed-demo
+
+# 清理演示数据
+make clean-demo
+```
+
+---
+
 ## 故障排查
 
 ### 常见问题 FAQ
@@ -589,6 +618,8 @@ make create-admin
 | `make dev` | 一键启动开发环境（包含所有初始化） |
 | `make init-db` | 初始化数据库表结构 |
 | `make create-admin` | 创建管理员账号（admin/admin123） |
+| `make seed-demo` | 加载旅游电商演示数据 |
+| `make clean-demo` | 清理演示数据 |
 | `make verify` | 验证所有服务健康状态 |
 | `make logs` | 查看所有服务日志 |
 | `make clean` | 清理所有容器和数据卷 |
