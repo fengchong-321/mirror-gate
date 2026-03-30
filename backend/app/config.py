@@ -1,3 +1,5 @@
+import secrets
+import os
 from typing import Optional
 from pydantic_settings import BaseSettings
 from functools import lru_cache
@@ -8,7 +10,9 @@ class Settings(BaseSettings):
     APP_NAME: str = "MirrorGate"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
-    SECRET_KEY: str = "REDACTED_SECRET_KEY"
+    # 从环境变量读取 SECRET_KEY，如果未设置则生成随机值（仅用于开发环境）
+    # 生产环境请务必设置环境变量 SECRET_KEY
+    SECRET_KEY: str = os.getenv("SECRET_KEY", secrets.token_hex(32))
 
     # Database
     MYSQL_HOST: str = "localhost"
